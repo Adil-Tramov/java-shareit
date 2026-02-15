@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import ru.practicum.shareit.item.dto.ItemDto;
 
 import java.util.List;
 
@@ -58,7 +59,8 @@ public class ItemController {
 
         ItemDto updatedItem = itemService.updateItem(userId, itemId, itemDto);
         if (updatedItem == null) {
-            if (itemService.getItemById(itemId) == null) {
+            ItemDto existingItem = itemService.getItemById(itemId);
+            if (existingItem == null) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Вещь с ID " + itemId + " не найдена");
             } else {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Пользователь с ID " + userId + " не является владельцем вещи");

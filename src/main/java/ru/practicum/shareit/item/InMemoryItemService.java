@@ -2,12 +2,15 @@ package ru.practicum.shareit.item;
 
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.UserDto;
 import ru.practicum.shareit.user.UserService;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.model.Item;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -24,24 +27,17 @@ public class InMemoryItemService implements ItemService {
 
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        if (userService.getUserById(userId) == null) {
-            throw new RuntimeException("Пользователь с ID " + userId + " не найден");
+        UserDto user = userService.getUserById(userId);
+        if (user == null) {
+            return null;
         }
-        if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            throw new RuntimeException("Название вещи не может быть пустым");
-        }
-        if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            throw new RuntimeException("Описание вещи не может быть пустым");
-        }
+
         Item item = ItemMapper.toItem(itemDto);
         item.setId(nextId.getAndIncrement());
         User owner = new User();
         owner.setId(userId);
         item.setOwner(owner);
 
-        if (item.getAvailable() == null) {
-            item.setAvailable(true);
-        }
         items.put(item.getId(), item);
         return ItemMapper.toItemDto(item);
     }
@@ -49,13 +45,14 @@ public class InMemoryItemService implements ItemService {
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
         Item existingItem = items.get(itemId);
-
         if (existingItem == null) {
-            throw new RuntimeException("Вещь с ID " + itemId + " не найдена");
+            return null;
         }
+
         if (!existingItem.getOwner().getId().equals(userId)) {
-            throw new RuntimeException("Пользователь с ID " + userId + " не является владельцем вещи с ID " + itemId);
+            return null;
         }
+
         if (itemDto.getName() != null && !itemDto.getName().isBlank()) {
             existingItem.setName(itemDto.getName());
         }
@@ -99,7 +96,7 @@ public class InMemoryItemService implements ItemService {
         String searchText = text.toLowerCase();
 
         return items.values().stream()
-                .filter(Item::getAvailable) // Только доступные вещи
+                .filter(Item::getAvailable)
                 .filter(item -> item.getName().toLowerCase().contains(searchText) || item.getDescription().toLowerCase().contains(searchText))
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
