@@ -70,7 +70,7 @@ public class InMemoryItemService implements ItemService {
     public ItemDto getItemById(Long itemId) {
         Item item = items.get(itemId);
         if (item == null) {
-            throw new RuntimeException("Вещь с ID " + itemId + " не найдена");
+            return null;
         }
         return ItemMapper.toItemDto(item);
     }
@@ -78,7 +78,7 @@ public class InMemoryItemService implements ItemService {
     @Override
     public List<ItemDto> getAllUserItems(Long userId) {
         if (userService.getUserById(userId) == null) {
-            throw new RuntimeException("Пользователь с ID " + userId + " не найден");
+            return null;
         }
 
         return items.values().stream()
@@ -97,7 +97,8 @@ public class InMemoryItemService implements ItemService {
 
         return items.values().stream()
                 .filter(Item::getAvailable)
-                .filter(item -> item.getName().toLowerCase().contains(searchText) || item.getDescription().toLowerCase().contains(searchText))
+                .filter(item -> item.getName().toLowerCase().contains(searchText) ||
+                        item.getDescription().toLowerCase().contains(searchText))
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }
