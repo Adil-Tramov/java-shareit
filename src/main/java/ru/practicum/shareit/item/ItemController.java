@@ -19,6 +19,7 @@ import java.util.List;
 public class ItemController {
 
     private final ItemService itemService;
+
     private Long getUserIdFromHeader(Long userIdHeader) {
         if (userIdHeader == null) {
             System.err.println("Заголовок X-Sharer-User-Id отсутствует.");
@@ -26,8 +27,10 @@ public class ItemController {
         }
         return userIdHeader;
     }
+
     @PostMapping
-    public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") Long userId, @RequestBody ItemDto itemDto) {
+    public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") Long userId,
+                              @RequestBody ItemDto itemDto) {
         Long ownerId = getUserIdFromHeader(userId);
         if (ownerId == null) {
             return null;
@@ -45,10 +48,12 @@ public class ItemController {
         }
         return itemService.updateItem(ownerId, itemId, itemDto);
     }
+
     @GetMapping("/{itemId}")
     public ItemDto getItemById(@PathVariable Long itemId) {
         return itemService.getItemById(itemId);
     }
+
     @GetMapping
     public List<ItemDto> getAllUserItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
         Long ownerId = getUserIdFromHeader(userId);
@@ -57,8 +62,10 @@ public class ItemController {
         }
         return itemService.getAllUserItems(ownerId);
     }
+
     @GetMapping("/search")
     public List<ItemDto> searchItems(@RequestParam("text") String text) {
         return itemService.searchItems(text);
+
     }
 }
