@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user;
 
 import org.springframework.stereotype.Service;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,6 @@ public class InMemoryUserService implements UserService {
     @Override
     public UserDto createUser(UserDto userDto) {
         if (users.values().stream().anyMatch(u -> u.getEmail().equals(userDto.getEmail()))) {
-            System.err.println("Пользователь с таким email уже существует: " + userDto.getEmail());
             return null;
         }
 
@@ -30,20 +28,21 @@ public class InMemoryUserService implements UserService {
     public UserDto updateUser(Long userId, UserDto userDto) {
         User existingUser = users.get(userId);
         if (existingUser == null) {
-            System.err.println("Пользователь с ID " + userId + " не найден.");
             return null;
         }
-        if (userDto.getName() != null) {
-            existingUser.setName(userDto.getName());
-        }
-        if (userDto.getEmail() != null) {
+
+        // Проверка email при обновлении
+        if (userDto.getEmail() != null && !userDto.getEmail().equals(existingUser.getEmail())) {
             if (users.values().stream()
                     .filter(u -> !u.getId().equals(userId))
                     .anyMatch(u -> u.getEmail().equals(userDto.getEmail()))) {
-                System.err.println("Пользователь с таким email уже существует: " + userDto.getEmail());
                 return null;
             }
             existingUser.setEmail(userDto.getEmail());
+        }
+
+        if (userDto.getName() != null) {
+            existingUser.setName(userDto.getName());
         }
 
         return UserMapper.toUserDto(existingUser);
@@ -52,11 +51,7 @@ public class InMemoryUserService implements UserService {
     @Override
     public UserDto getUserById(Long userId) {
         User user = users.get(userId);
-        if (user == null) {
-            System.err.println("Пользователь с ID " + userId + " не найден.");
-            return null;
-        }
-        return UserMapper.toUserDto(user);
+        return user != null ? UserMapper.toUserDto(user) : null;
     }
 
     @Override
@@ -68,10 +63,7 @@ public class InMemoryUserService implements UserService {
 
     @Override
     public void deleteUser(Long userId) {
-        User removedUser = users.remove(userId);
-        if (removedUser == null) {
-            System.err.println("Пользователь с ID " + userId + " не найден для удаления.");
-        }
+        users.remove(userId);
     }
 }
 
