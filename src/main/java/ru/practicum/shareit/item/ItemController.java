@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import java.util.List;
@@ -23,70 +24,28 @@ public class ItemController {
 
     private final ItemService itemService;
 
-    private void validateUserId(Long userId) {
-        if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Отсутствует заголовок X-Sharer-User-Id");
-        }
-    }
-
     @PostMapping
-    public ItemDto createItem(@RequestHeader(value = "X-Sharer-User-Id", required = false) Long userId,
+    @ResponseStatus(HttpStatus.CREATED)
+    public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                               @RequestBody ItemDto itemDto) {
-        validateUserId(userId);
-
-        if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Название не может быть пустым");
-        }
-        if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Описание не может быть пустым");
-        }
-        if (itemDto.getAvailable() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Статус доступности должен быть указан");
-        }
-
-        ItemDto createdItem = itemService.createItem(userId, itemDto);
-        if (createdItem == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь с ID " + userId + " не найден");
-        }
-        return createdItem;
+        return itemService.createItem(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@RequestHeader(value = "X-Sharer-User-Id", required = false) Long userId,
+    public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                               @PathVariable Long itemId,
                               @RequestBody ItemDto itemDto) {
-        validateUserId(userId);
-
-        ItemDto updatedItem = itemService.updateItem(userId, itemId, itemDto);
-        if (updatedItem == null) {
-            ItemDto existingItem = itemService.getItemById(itemId);
-            if (existingItem == null) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Вещь с ID " + itemId + " не найдена");
-            } else {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Пользователь с ID " + userId + " не является владельцем вещи");
-            }
-        }
-        return updatedItem;
+        return itemService.updateItem(userId, itemId, itemDto);
     }
 
     @GetMapping("/{itemId}")
     public ItemDto getItemById(@PathVariable Long itemId) {
-        ItemDto item = itemService.getItemById(itemId);
-        if (item == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Вещь с ID " + itemId + " не найдена");
-        }
-        return item;
+        return itemService.getItemById(itemId);
     }
 
     @GetMapping
-    public List<ItemDto> getAllUserItems(@RequestHeader(value = "X-Sharer-User-Id", required = false) Long userId) {
-        validateUserId(userId);
-
-        List<ItemDto> items = itemService.getAllUserItems(userId);
-        if (items == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователь с ID " + userId + " не найден");
-        }
-        return items;
+    public List<ItemDto> getAllUserItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
+        return itemService.getAllUserItems(userId);
     }
 
     @GetMapping("/search")
