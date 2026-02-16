@@ -3,9 +3,7 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.UserDto;
 import ru.practicum.shareit.user.UserRepository;
-import ru.practicum.shareit.user.UserMapper;           // <-- ДОБАВЬТЕ ЭТОТ ИМПОРТ
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
@@ -34,15 +32,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        // 1. СНАЧАЛА проверяем существование пользователя
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            return null; // 404 Not Found
+            return null;
         }
 
-        // 2. ПОТОМ валидация данных
         if (!validateItemData(itemDto)) {
-            return null; // 400 Bad Request
+            return null;
         }
 
         Item item = ItemMapper.toItem(itemDto);
@@ -56,23 +52,20 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        // 1. СНАЧАЛА проверяем существование вещи
         Item existingItem = itemRepository.findById(itemId).orElse(null);
         if (existingItem == null) {
-            return null; // 404 Not Found
+            return null;
         }
 
-        // 2. ПОТОМ проверяем права доступа
         if (!existingItem.getOwner().getId().equals(userId)) {
-            return null; // 403 Forbidden
+            return null;
         }
 
-        // 3. ПОТОМ валидация данных при обновлении
         if (itemDto.getName() != null && itemDto.getName().isBlank()) {
-            return null; // 400 Bad Request
+            return null;
         }
         if (itemDto.getDescription() != null && itemDto.getDescription().isBlank()) {
-            return null; // 400 Bad Request
+            return null;
         }
 
         if (itemDto.getName() != null) {
@@ -90,20 +83,19 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItemById(Long itemId) {        // ЭТОТ МЕТОД ДОЛЖЕН БЫТЬ ТАКИМ
+    public ItemDto getItemById(Long itemId) {
         Item item = itemRepository.findById(itemId).orElse(null);
         if (item == null) {
-            return null; // 404 Not Found
+            return null;
         }
         return ItemMapper.toItemDto(item);
     }
 
     @Override
     public List<ItemDto> getAllUserItems(Long userId) {
-        // Проверяем существование пользователя
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            return null; // 404 Not Found
+            return null;
         }
 
         return itemRepository.findAllByOwnerId(userId).stream()
