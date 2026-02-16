@@ -17,24 +17,29 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
-    private void validateItemData(ItemDto itemDto) {
+    private boolean validateItemData(ItemDto itemDto) {
         if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            throw new IllegalArgumentException("Название не может быть пустым");
+            return false;
         }
         if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            throw new IllegalArgumentException("Описание не может быть пустым");
+            return false;
         }
         if (itemDto.getAvailable() == null) {
-            throw new IllegalArgumentException("Статус доступности должен быть указан");
+            return false;
         }
+        return true;
     }
 
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        validateItemData(itemDto);
+        if (!validateItemData(itemDto)) {
+            return null;
+        }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь с ID " + userId + " не найден"));
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return null;
+        }
 
         Item item = ItemMapper.toItem(itemDto);
         User owner = new User();
@@ -47,18 +52,19 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        Item existingItem = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Вещь с ID " + itemId + " не найдена"));
+        Item existingItem = itemRepository.findById(itemId).orElse(null);
+        if (existingItem == null) {
+            return null;
+        }
 
         if (!existingItem.getOwner().getId().equals(userId)) {
-            throw new IllegalArgumentException("Пользователь с ID " + userId + " не является владельцем вещи");
+            return null;
         }
-
         if (itemDto.getName() != null && itemDto.getName().isBlank()) {
-            throw new IllegalArgumentException("Название не может быть пустым");
+            return null;
         }
         if (itemDto.getDescription() != null && itemDto.getDescription().isBlank()) {
-            throw new IllegalArgumentException("Описание не может быть пустым");
+            return null;
         }
 
         if (itemDto.getName() != null) {
@@ -77,15 +83,17 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemById(Long itemId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Вещь с ID " + itemId + " не найдена"));
+        Item item = itemRepository.findById(itemId).orElse(null);
+        if (item == null) {
+            return null;
+        }
         return ItemMapper.toItemDto(item);
     }
 
     @Override
     public List<ItemDto> getAllUserItems(Long userId) {
         if (!userRepository.findById(userId).isPresent()) {
-            throw new IllegalArgumentException("Пользователь с ID " + userId + " не найден");
+            return null;
         }
 
         return itemRepository.findAllByOwnerId(userId).stream()
