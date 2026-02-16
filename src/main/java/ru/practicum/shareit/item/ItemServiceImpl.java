@@ -32,12 +32,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        if (!validateItemData(itemDto)) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
             return null;
         }
 
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
+        if (!validateItemData(itemDto)) {
             return null;
         }
 
@@ -60,6 +60,7 @@ public class ItemServiceImpl implements ItemService {
         if (!existingItem.getOwner().getId().equals(userId)) {
             return null;
         }
+
         if (itemDto.getName() != null && itemDto.getName().isBlank()) {
             return null;
         }
@@ -92,7 +93,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getAllUserItems(Long userId) {
-        if (!userRepository.findById(userId).isPresent()) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
             return null;
         }
 
