@@ -2,6 +2,8 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -17,55 +19,54 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
 
-    private boolean validateItemData(ItemDto itemDto) {
+    private User getUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Пользователь с ID " + userId + " не найден"));
+    }
+
+    private Item getItemOrThrow(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Вещь с ID " + itemId + " не найдена"));
+    }
+
+    private void validateItemData(ItemDto itemDto) {
         if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            return false;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Название не может быть пустым");
         }
         if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            return false;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Описание не может быть пустым");
         }
         if (itemDto.getAvailable() == null) {
-            return false;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Статус доступности должен быть указан");
         }
-        return true;
     }
 
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            return null;
-        }
-
-        if (!validateItemData(itemDto)) {
-            return null;
-        }
-
-        Item item = ItemMapper.toItem(itemDto);
-        User owner = new User();
-        owner.setId(userId);
-        item.setOwner(owner);
-
+        User user = getUserOrThrow(userId);
+        validateItemData(itemDto);
+        Item item = ItemMapper.toItem(itemDto, user);
         Item savedItem = itemRepository.save(item);
         return ItemMapper.toItemDto(savedItem);
     }
 
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        Item existingItem = itemRepository.findById(itemId).orElse(null);
-        if (existingItem == null) {
-            return null;
-        }
+        Item existingItem = getItemOrThrow(itemId);
 
         if (!existingItem.getOwner().getId().equals(userId)) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Пользователь с ID " + userId + " не является владельцем вещи");
         }
 
+        // 3. Валидация данных при обновлении (теперь бросает исключение)
         if (itemDto.getName() != null && itemDto.getName().isBlank()) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Название не может быть пустым");
         }
         if (itemDto.getDescription() != null && itemDto.getDescription().isBlank()) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Описание не может быть пустым");
         }
 
         if (itemDto.getName() != null) {
@@ -84,19 +85,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemById(Long itemId) {
-        Item item = itemRepository.findById(itemId).orElse(null);
-        if (item == null) {
-            return null;
-        }
+        Item item = getItemOrThrow(itemId);
         return ItemMapper.toItemDto(item);
     }
 
     @Override
     public List<ItemDto> getAllUserItems(Long userId) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            return null;
-        }
+        getUserOrThrow(userId);
 
         return itemRepository.findAllByOwnerId(userId).stream()
                 .map(ItemMapper::toItemDto)
