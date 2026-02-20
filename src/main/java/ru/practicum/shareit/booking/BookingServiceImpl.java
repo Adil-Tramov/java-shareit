@@ -33,6 +33,11 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingDto createBooking(Long userId, BookingDto bookingDto) {
         User booker = getUserOrThrow(userId);
+
+        if (bookingDto.getItem() == null || bookingDto.getItem().getId() == null) {
+            throw new ValidationException("ID вещи должен быть указан");
+        }
+
         Item item = getItemOrThrow(bookingDto.getItem().getId());
 
         if (item.getOwner().getId().equals(userId)) {

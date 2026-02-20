@@ -74,22 +74,24 @@ public class ItemServiceImpl implements ItemService {
             throw new NotFoundException("Пользователь с ID " + userId + " не является владельцем вещи");
         }
 
-        if (itemDto.getName() != null && itemDto.getName().isBlank()) {
-            throw new ValidationException("Название не может быть пустым");
-        }
-        if (itemDto.getDescription() != null && itemDto.getDescription().isBlank()) {
-            throw new ValidationException("Описание не может быть пустым");
-        }
-
         if (itemDto.getName() != null) {
+            if (itemDto.getName().isBlank()) {
+                throw new ValidationException("Название не может быть пустым");
+            }
             existingItem.setName(itemDto.getName());
         }
+
         if (itemDto.getDescription() != null) {
+            if (itemDto.getDescription().isBlank()) {
+                throw new ValidationException("Описание не может быть пустым");
+            }
             existingItem.setDescription(itemDto.getDescription());
         }
+
         if (itemDto.getAvailable() != null) {
             existingItem.setAvailable(itemDto.getAvailable());
         }
+
         if (itemDto.getRequestId() != null) {
             existingItem.setRequestId(itemDto.getRequestId());
         }
@@ -156,6 +158,10 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto addComment(Long userId, Long itemId, CommentCreateDto commentDto) {
         User author = getUserOrThrow(userId);
         Item item = getItemOrThrow(itemId);
+
+        if (commentDto.getText() == null || commentDto.getText().isBlank()) {
+            throw new ValidationException("Текст комментария не может быть пустым");
+        }
 
         boolean hasBookedAndFinished = bookingRepository.existsByBookerIdAndItemIdAndEndBeforeAndStatus(
                 userId, itemId, LocalDateTime.now(), BookingStatus.APPROVED);
