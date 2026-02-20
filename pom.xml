@@ -12,6 +12,7 @@
 	<groupId>ru.practicum</groupId>
 	<artifactId>shareit</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+
 	<name>ShareIt</name>
 
 	<properties>
@@ -23,15 +24,14 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -52,21 +52,18 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-configuration-processor</artifactId>
-			<optional>true</optional>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>test</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 	</dependencies>
 
@@ -77,7 +74,6 @@
 				<filtering>true</filtering>
 			</resource>
 		</resources>
-
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -92,7 +88,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -104,7 +99,6 @@
 						</systemPropertyVariables>
 					</configuration>
 				</plugin>
-
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-checkstyle-plugin</artifactId>
@@ -131,7 +125,6 @@
 						</dependency>
 					</dependencies>
 				</plugin>
-
 				<plugin>
 					<groupId>com.github.spotbugs</groupId>
 					<artifactId>spotbugs-maven-plugin</artifactId>
@@ -148,7 +141,6 @@
 						</execution>
 					</executions>
 				</plugin>
-
 				<plugin>
 					<groupId>org.jacoco</groupId>
 					<artifactId>jacoco-maven-plugin</artifactId>
@@ -220,9 +212,30 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-
 	<profiles>
-
+		<profile>
+			<id>check</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-checkstyle-plugin</artifactId>
+					</plugin>
+					<plugin>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+			<reporting>
+				<plugins>
+					<plugin>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</reporting>
+		</profile>
 		<profile>
 			<id>coverage</id>
 			<build>
@@ -235,4 +248,5 @@
 			</build>
 		</profile>
 	</profiles>
+
 </project>
