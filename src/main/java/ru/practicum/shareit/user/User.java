@@ -1,7 +1,12 @@
 package ru.practicum.shareit.user;
 
-/**
- * TODO Sprint add-controllers.
- */
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+
+@Data
+@RequiredArgsConstructor
 public class User {
+    private Long id;
+    private String name;
+    private String email;
 }
