@@ -51,4 +51,5 @@ CREATE TABLE IF NOT EXISTS comments (
     CONSTRAINT fk_comment_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-ALTER TABLE items ADD CONSTRAINT IF NOT EXISTS fk_item_request FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE SET NULL;
+ALTER TABLE items DROP CONSTRAINT IF EXISTS fk_item_request;
+ALTER TABLE items ADD CONSTRAINT fk_item_request FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE SET NULL;
