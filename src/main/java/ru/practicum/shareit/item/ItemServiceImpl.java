@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -232,10 +233,12 @@ public class ItemServiceImpl implements ItemService {
         Item item = getItemOrThrow(itemId);
 
         LocalDateTime now = LocalDateTime.now();
-        boolean hasBooked = bookingRepository.existsByBookerIdAndItemIdAndEndBeforeAndStatusApproved(
-                userId, itemId, now);
 
-        if (!hasBooked) {
+        List<Booking> completedBookings = bookingRepository
+                .findByBookerIdAndItemIdAndEndBeforeAndStatusOrderByEndDesc(
+                        userId, itemId, now, Status.APPROVED);
+
+        if (completedBookings.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Пользователь может оставить отзыв только после завершения аренды вещи");
         }

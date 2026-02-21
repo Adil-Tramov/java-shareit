@@ -10,7 +10,6 @@ import ru.practicum.shareit.booking.model.Status;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -20,6 +19,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b FROM Booking b " +
             "WHERE b.item.owner.id = :ownerId")
     List<Booking> findAllByItemOwnerId(@Param("ownerId") Long ownerId, Sort sort);
+
+    List<Booking> findByBookerIdAndItemIdAndEndBeforeAndStatusOrderByEndDesc(
+            Long bookerId,
+            Long itemId,
+            LocalDateTime end,
+            Status status
+    );
 
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
             "FROM Booking b " +
