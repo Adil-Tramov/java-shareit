@@ -20,10 +20,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "WHERE b.item.owner.id = :ownerId")
     List<Booking> findAllByItemOwnerId(@Param("ownerId") Long ownerId, Sort sort);
 
-    List<Booking> findByBookerIdAndItemIdAndEndBeforeAndStatusOrderByEndDesc(
+    List<Booking> findByBookerIdAndItemIdAndStatusOrderByEndDesc(
             Long bookerId,
             Long itemId,
-            LocalDateTime end,
             Status status
     );
 

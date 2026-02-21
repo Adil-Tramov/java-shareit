@@ -242,13 +242,29 @@ public class ItemServiceImpl implements ItemService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        List<Booking> completedBookings = bookingRepository
-                .findByBookerIdAndItemIdAndEndBeforeAndStatusOrderByEndDesc(
-                        userId, itemId, now, Status.APPROVED);
+        System.out.println("=== ADD COMMENT DEBUG ===");
+        System.out.println("User ID: " + userId);
+        System.out.println("Item ID: " + itemId);
+        System.out.println("Current time: " + now);
+
+        List<Booking> allBookings = bookingRepository.findByBookerIdAndItemIdAndStatusOrderByEndDesc(
+                userId, itemId, Status.APPROVED);
+
+        System.out.println("Found " + allBookings.size() + " approved bookings");
+        for (Booking b : allBookings) {
+            System.out.println("Booking: id=" + b.getId() +
+                    ", start=" + b.getStart() +
+                    ", end=" + b.getEnd() +
+                    ", end before now=" + b.getEnd().isBefore(now));
+        }
+
+        List<Booking> completedBookings = allBookings.stream()
+                .filter(b -> b.getEnd().isBefore(now))
+                .collect(Collectors.toList());
 
         if (completedBookings.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Пользователь может оставить отзыв только после завершения аренды вещи");
+                    "Пользователь может оставить отзыв только после завершения аренды вещи. Найдено бронирований: " + allBookings.size());
         }
 
         Comment comment = new Comment();
@@ -258,6 +274,7 @@ public class ItemServiceImpl implements ItemService {
         comment.setCreated(now);
 
         Comment savedComment = commentRepository.save(comment);
+        System.out.println("Saved comment with id: " + savedComment.getId());
 
         return CommentDto.builder()
                 .id(savedComment.getId())
