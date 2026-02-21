@@ -105,10 +105,18 @@ public class ItemServiceImpl implements ItemService {
         Item item = getItemOrThrow(itemId);
 
         LocalDateTime now = LocalDateTime.now();
-        List<Comment> comments = commentRepository.findAllByItemId(itemId);
-        List<CommentDto> commentDtos = comments.stream()
-                .map(CommentMapper::toCommentDto)
+
+        List<Comment> commentList = commentRepository.findAllByItemId(itemId);
+        List<CommentDto> commentDtos = commentList.stream()
+                .map(comment -> CommentDto.builder()
+                        .id(comment.getId())
+                        .text(comment.getText())
+                        .authorName(comment.getAuthor().getName())
+                        .created(comment.getCreated())
+                        .build())
                 .collect(Collectors.toList());
+
+        System.out.println("Found " + commentDtos.size() + " comments for item " + itemId);
 
         if (item.getOwner().getId().equals(userId)) {
             List<Booking> lastBookings = bookingRepository.findLastBooking(itemId, now);
@@ -250,6 +258,12 @@ public class ItemServiceImpl implements ItemService {
         comment.setCreated(now);
 
         Comment savedComment = commentRepository.save(comment);
-        return CommentMapper.toCommentDto(savedComment);
+
+        return CommentDto.builder()
+                .id(savedComment.getId())
+                .text(savedComment.getText())
+                .authorName(savedComment.getAuthor().getName())
+                .created(savedComment.getCreated())
+                .build();
     }
 }
