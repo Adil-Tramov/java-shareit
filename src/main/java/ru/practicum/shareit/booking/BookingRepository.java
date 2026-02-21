@@ -20,17 +20,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "WHERE b.item.owner.id = :ownerId")
     List<Booking> findAllByItemOwnerId(@Param("ownerId") Long ownerId, Sort sort);
 
+    List<Booking> findByBookerId(Long bookerId, Sort sort);
+
     List<Booking> findByBookerIdAndItemIdAndStatus(
             Long bookerId,
             Long itemId,
             Status status
     );
 
-    List<Booking> findByBookerIdAndItemIdAndStatusOrderByEndDesc(
-            Long bookerId,
-            Long itemId,
-            Status status
-    );
 
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
             "FROM Booking b " +
