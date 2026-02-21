@@ -1,8 +1,8 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -117,8 +117,6 @@ public class ItemServiceImpl implements ItemService {
                         .build())
                 .collect(Collectors.toList());
 
-        System.out.println("Item " + itemId + " has " + commentDtos.size() + " comments");
-
         if (item.getOwner().getId().equals(userId)) {
             List<Booking> lastBookings = bookingRepository.findLastBooking(itemId, now);
             List<Booking> nextBookings = bookingRepository.findNextBooking(itemId, now);
@@ -182,7 +180,13 @@ public class ItemServiceImpl implements ItemService {
                     .stream()
                     .collect(Collectors.groupingBy(
                             comment -> comment.getItem().getId(),
-                            Collectors.mapping(CommentMapper::toCommentDto, Collectors.toList())
+                            Collectors.mapping(comment -> CommentDto.builder()
+                                            .id(comment.getId())
+                                            .text(comment.getText())
+                                            .authorName(comment.getAuthor().getName())
+                                            .created(comment.getCreated())
+                                            .build(),
+                                    Collectors.toList())
                     ));
         }
 
@@ -238,63 +242,18 @@ public class ItemServiceImpl implements ItemService {
     @Override
     @Transactional
     public CommentDto addComment(Long userId, Long itemId, CommentRequestDto commentRequestDto) {
-        System.out.println("\n========== ADD COMMENT DEBUG START ==========");
-        System.out.println("User ID: " + userId);
-        System.out.println("Item ID: " + itemId);
-        System.out.println("Comment text: " + commentRequestDto.getText());
-
         User author = getUserOrThrow(userId);
-        System.out.println("Author found: " + author.getName() + " (ID: " + author.getId() + ")");
-
         Item item = getItemOrThrow(itemId);
-        System.out.println("Item found: " + item.getName() + " (ID: " + item.getId() + ")");
-        System.out.println("Item owner ID: " + item.getOwner().getId());
 
         LocalDateTime now = LocalDateTime.now();
-        System.out.println("Current time: " + now);
 
-        System.out.println("\nSearching for bookings with:");
-        System.out.println("- bookerId: " + userId);
-        System.out.println("- itemId: " + itemId);
-        System.out.println("- status: " + Status.APPROVED);
+        List<Booking> completedBookings = bookingRepository
+                .findByBookerIdAndItemIdAndEndBeforeAndStatusOrderByEndDesc(
+                        userId, itemId, now, Status.APPROVED);
 
-        List<Booking> userBookings = bookingRepository
-                .findByBookerIdAndItemIdAndStatus(userId, itemId, Status.APPROVED);
-
-        System.out.println("\nFound " + userBookings.size() + " APPROVED bookings:");
-
-        if (userBookings.isEmpty()) {
-            System.out.println("NO APPROVED BOOKINGS FOUND!");
-
-            List<Booking> allUserBookings = bookingRepository.findByBookerId(userId, Sort.by(Sort.Direction.DESC, "start"));
-            System.out.println("\nAll bookings for user " + userId + ": " + allUserBookings.size());
-            for (Booking b : allUserBookings) {
-                System.out.println("  Booking ID: " + b.getId() +
-                        ", Item ID: " + b.getItem().getId() +
-                        ", Status: " + b.getStatus() +
-                        ", Start: " + b.getStart() +
-                        ", End: " + b.getEnd());
-            }
-        } else {
-            for (Booking booking : userBookings) {
-                System.out.println("\n  Booking ID: " + booking.getId());
-                System.out.println("    Start: " + booking.getStart());
-                System.out.println("    End: " + booking.getEnd());
-                System.out.println("    Status: " + booking.getStatus());
-                System.out.println("    End before now? " + booking.getEnd().isBefore(now));
-            }
-        }
-
-        boolean hasCompletedBooking = userBookings.stream()
-                .anyMatch(booking -> booking.getEnd().isBefore(now));
-
-        System.out.println("\nHas completed booking? " + hasCompletedBooking);
-
-        if (!hasCompletedBooking) {
-            System.out.println("ERROR: No completed bookings found! Throwing BAD_REQUEST");
-            System.out.println("========== ADD COMMENT DEBUG END ==========\n");
+        if (completedBookings.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "User can only leave a comment after completing rental of the item");
+                    "Пользователь может оставить отзыв только после завершения аренды вещи");
         }
 
         Comment comment = new Comment();
@@ -303,20 +262,13 @@ public class ItemServiceImpl implements ItemService {
         comment.setAuthor(author);
         comment.setCreated(now);
 
-        System.out.println("\nSaving comment...");
         Comment savedComment = commentRepository.save(comment);
-        System.out.println("Comment saved with ID: " + savedComment.getId());
 
-        CommentDto result = CommentDto.builder()
+        return CommentDto.builder()
                 .id(savedComment.getId())
                 .text(savedComment.getText())
                 .authorName(savedComment.getAuthor().getName())
                 .created(savedComment.getCreated())
                 .build();
-
-        System.out.println("Returning CommentDto with id: " + result.getId());
-        System.out.println("========== ADD COMMENT DEBUG END ==========\n");
-
-        return result;
     }
 }

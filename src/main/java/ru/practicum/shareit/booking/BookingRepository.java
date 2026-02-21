@@ -22,9 +22,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByBookerId(Long bookerId, Sort sort);
 
-    List<Booking> findByBookerIdAndItemIdAndStatus(
+    List<Booking> findByBookerIdAndItemIdAndEndBeforeAndStatusOrderByEndDesc(
             Long bookerId,
             Long itemId,
+            LocalDateTime end,
             Status status
     );
 
