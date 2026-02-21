@@ -242,29 +242,32 @@ public class ItemServiceImpl implements ItemService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        System.out.println("=== ADD COMMENT DEBUG ===");
+        System.out.println("========== ADD COMMENT DEBUG ==========");
         System.out.println("User ID: " + userId);
         System.out.println("Item ID: " + itemId);
         System.out.println("Current time: " + now);
 
-        List<Booking> allBookings = bookingRepository.findByBookerIdAndItemIdAndStatusOrderByEndDesc(
-                userId, itemId, Status.APPROVED);
+        List<Booking> userBookings = bookingRepository
+                .findByBookerIdAndItemIdAndStatus(userId, itemId, Status.APPROVED);
 
-        System.out.println("Found " + allBookings.size() + " approved bookings");
-        for (Booking b : allBookings) {
-            System.out.println("Booking: id=" + b.getId() +
-                    ", start=" + b.getStart() +
-                    ", end=" + b.getEnd() +
-                    ", end before now=" + b.getEnd().isBefore(now));
+        System.out.println("Found " + userBookings.size() + " approved bookings");
+
+        for (Booking booking : userBookings) {
+            System.out.println("Booking ID: " + booking.getId());
+            System.out.println("  start: " + booking.getStart());
+            System.out.println("  end: " + booking.getEnd());
+            System.out.println("  end before now? " + booking.getEnd().isBefore(now));
         }
 
-        List<Booking> completedBookings = allBookings.stream()
-                .filter(b -> b.getEnd().isBefore(now))
-                .collect(Collectors.toList());
+        boolean hasCompletedBooking = userBookings.stream()
+                .anyMatch(booking -> booking.getEnd().isBefore(now));
 
-        if (completedBookings.isEmpty()) {
+        System.out.println("Has completed booking? " + hasCompletedBooking);
+
+        if (!hasCompletedBooking) {
+            System.out.println("ERROR: No completed bookings found!");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Пользователь может оставить отзыв только после завершения аренды вещи. Найдено бронирований: " + allBookings.size());
+                    "User can only leave a comment after completing rental of the item");
         }
 
         Comment comment = new Comment();
@@ -274,7 +277,8 @@ public class ItemServiceImpl implements ItemService {
         comment.setCreated(now);
 
         Comment savedComment = commentRepository.save(comment);
-        System.out.println("Saved comment with id: " + savedComment.getId());
+        System.out.println("Comment saved with ID: " + savedComment.getId());
+        System.out.println("========================================");
 
         return CommentDto.builder()
                 .id(savedComment.getId())
