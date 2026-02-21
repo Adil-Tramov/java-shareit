@@ -18,7 +18,6 @@
 
 	<properties>
 		<java.version>21</java.version>
-		<maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
 	</properties>
 
 	<dependencies>
@@ -87,29 +86,6 @@
 						</exclude>
 					</excludes>
 				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>${maven-enforcer-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>enforce</id>
-						<configuration>
-							<rules>
-								<requireMavenVersion>
-									<version>3.6.3</version>
-								</requireMavenVersion>
-								<requireJavaVersion>
-									<version>21</version>
-								</requireJavaVersion>
-							</rules>
-						</configuration>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 		<pluginManagement>
@@ -273,5 +249,4 @@
 			</build>
 		</profile>
 	</profiles>
-
 </project>
