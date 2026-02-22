@@ -61,12 +61,10 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
-        getUserOrThrow(userId);
-
         Booking booking = getBookingOrThrow(bookingId);
 
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Только владелец вещи может подтверждать бронирование");
         }
 
