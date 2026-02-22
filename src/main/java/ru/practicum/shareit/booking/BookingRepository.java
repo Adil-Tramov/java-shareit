@@ -16,11 +16,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findAllByBookerId(Long bookerId, Sort sort);
 
-    @Query("SELECT b FROM Booking b " +
-            "WHERE b.item.owner.id = :ownerId")
-    List<Booking> findAllByItemOwnerId(@Param("ownerId") Long ownerId, Sort sort);
-
-    List<Booking> findByBookerId(Long bookerId, Sort sort);
+    List<Booking> findAllByItemOwnerId(Long ownerId, Sort sort);
 
     List<Booking> findByBookerIdAndItemIdAndEndBeforeAndStatusOrderByEndDesc(
             Long bookerId,
@@ -29,17 +25,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             Status status
     );
 
+    List<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(Long bookerId, LocalDateTime start, LocalDateTime end, Sort sort);
 
-    @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
-            "FROM Booking b " +
-            "WHERE b.booker.id = :userId " +
-            "AND b.item.id = :itemId " +
-            "AND b.end < :now " +
-            "AND b.status = ru.practicum.shareit.booking.model.Status.APPROVED")
-    boolean existsByBookerIdAndItemIdAndEndBeforeAndStatusApproved(
-            @Param("userId") Long userId,
-            @Param("itemId") Long itemId,
-            @Param("now") LocalDateTime now);
+    List<Booking> findAllByBookerIdAndEndBefore(Long bookerId, LocalDateTime end, Sort sort);
+
+    List<Booking> findAllByBookerIdAndStartAfter(Long bookerId, LocalDateTime start, Sort sort);
+
+    List<Booking> findAllByBookerIdAndStatus(Long bookerId, Status status, Sort sort);
+
+    List<Booking> findAllByItemOwnerIdAndStartBeforeAndEndAfter(Long ownerId, LocalDateTime start, LocalDateTime end, Sort sort);
+
+    List<Booking> findAllByItemOwnerIdAndEndBefore(Long ownerId, LocalDateTime end, Sort sort);
+
+    List<Booking> findAllByItemOwnerIdAndStartAfter(Long ownerId, LocalDateTime start, Sort sort);
+
+    List<Booking> findAllByItemOwnerIdAndStatus(Long ownerId, Status status, Sort sort);
 
     @Query("SELECT b FROM Booking b " +
             "WHERE b.item.id = :itemId " +
@@ -54,6 +54,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "AND b.status = ru.practicum.shareit.booking.model.Status.APPROVED " +
             "ORDER BY b.start ASC")
     List<Booking> findNextBooking(@Param("itemId") Long itemId, @Param("now") LocalDateTime now);
+
+    @Query("SELECT b FROM Booking b " +
+            "WHERE b.item.id IN :itemIds " +
+            "AND b.status = 'APPROVED' " +
+            "ORDER BY b.item.id, b.start")
+    List<Booking> findAllByItemIdsOrderByItemAndStart(@Param("itemIds") List<Long> itemIds);
 
     @Query("SELECT CASE WHEN COUNT(b) > 0 THEN true ELSE false END " +
             "FROM Booking b " +
