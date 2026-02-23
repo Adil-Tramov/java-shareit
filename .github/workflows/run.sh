@@ -1,5 +1,8 @@
-docker-compose up --detach
-chmod a+x ./tests/.github/workflows/wait-for-it.sh
-./tests/.github/workflows/wait-for-it.sh -t 60 localhost:8080
-./tests/.github/workflows/wait-for-it.sh -t 60 localhost:9090
-docker-compose logs
+#!/bin/bash
+set -e
+
+echo "Docker is up"
+
+./wait-for-it.sh postgres 5432 -t 60
+
+./wait-for-it.sh server 9090 -t 120
