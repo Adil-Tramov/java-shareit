@@ -59,7 +59,40 @@
 						<target>21</target>
 					</configuration>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-checkstyle-plugin</artifactId>
+					<version>3.2.0</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>check</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-checkstyle-plugin</artifactId>
+						<version>3.2.0</version>
+						<configuration>
+							<configLocation>checkstyle.xml</configLocation>
+							<failOnViolation>true</failOnViolation>
+							<logViolationsToConsole>true</logViolationsToConsole>
+							<includeTestSourceDirectory>true</includeTestSourceDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
