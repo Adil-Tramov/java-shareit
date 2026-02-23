@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<<<<<<< HEAD
+<<<<<<< HEAD
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+=======
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+>>>>>>> da33f33 (Sprint_16)
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+<<<<<<< HEAD
+		<version>3.3.2</version>
+		<relativePath/> <!-- lookup parent from repository -->
+=======
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -9,18 +27,40 @@
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.2.0</version>
 		<relativePath/>
+>>>>>>> adac883640e89975464113c261f241542b757645
+=======
+		<version>3.2.0</version>
+		<relativePath/>
+>>>>>>> da33f33 (Sprint_16)
 	</parent>
 
 	<groupId>ru.practicum</groupId>
 	<artifactId>shareit</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+	<packaging>pom</packaging>
+>>>>>>> da33f33 (Sprint_16)
+
+=======
+>>>>>>> adac883640e89975464113c261f241542b757645
 	<name>ShareIt</name>
+
+	<modules>
+		<module>server</module>
+		<module>gateway</module>
+	</modules>
 
 	<properties>
 		<java.version>21</java.version>
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+>>>>>>> adac883640e89975464113c261f241542b757645
 	</properties>
 
 	<dependencies>
@@ -30,32 +70,63 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
+<<<<<<< HEAD
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+=======
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
+>>>>>>> adac883640e89975464113c261f241542b757645
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+<<<<<<< HEAD
+
+=======
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+>>>>>>> adac883640e89975464113c261f241542b757645
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+<<<<<<< HEAD
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+=======
+>>>>>>> adac883640e89975464113c261f241542b757645
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+<<<<<<< HEAD
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+=======
+>>>>>>> adac883640e89975464113c261f241542b757645
 	</dependencies>
 
 	<build>
@@ -78,6 +149,49 @@
 					</excludes>
 				</configuration>
 			</plugin>
+<<<<<<< HEAD
+		</plugins>
+=======
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>3.2.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+>>>>>>> da33f33 (Sprint_16)
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<version>3.2.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.11.0</version>
+					<configuration>
+						<source>21</source>
+						<target>21</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+<<<<<<< HEAD
+=======
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -99,6 +213,7 @@
 		</plugins>
 	</build>
 
+>>>>>>> adac883640e89975464113c261f241542b757645
 	<profiles>
 		<profile>
 			<id>check</id>
@@ -108,8 +223,42 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-checkstyle-plugin</artifactId>
 					</plugin>
+<<<<<<< HEAD
+					<plugin>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+			<reporting>
+				<plugins>
+					<plugin>
+						<groupId>com.github.spotbugs</groupId>
+						<artifactId>spotbugs-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</reporting>
+		</profile>
+		<profile>
+			<id>coverage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+					</plugin>
+=======
+>>>>>>> adac883640e89975464113c261f241542b757645
 				</plugins>
 			</build>
 		</profile>
 	</profiles>
+<<<<<<< HEAD
+
 </project>
+=======
+</project>
+>>>>>>> adac883640e89975464113c261f241542b757645
+=======
+</project>
+>>>>>>> da33f33 (Sprint_16)
