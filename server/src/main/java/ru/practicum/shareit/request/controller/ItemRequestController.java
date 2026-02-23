@@ -20,13 +20,11 @@ import ru.practicum.shareit.request.dto.ItemRequestListDto;
 import ru.practicum.shareit.request.dto.RequestDtoResponseWithMD;
 import ru.practicum.shareit.request.service.ItemRequestService;
 
-import java.util.List;
-
 @Controller
 @RequestMapping("/requests")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ItemRequestController {
-    private final ItemRequestService itemRequestService;  // Имя поля
+    private final ItemRequestService itemRequestService;
     private final String userIdHeader = "X-Sharer-User-Id";
 
     @PostMapping
