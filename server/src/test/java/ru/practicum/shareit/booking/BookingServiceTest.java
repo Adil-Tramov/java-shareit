@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserRepository;
@@ -17,9 +18,9 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,15 +78,14 @@ class BookingServiceTest {
     }
 
     @Test
-    void approveBooking_ByWrongUser_ShouldThrowForbiddenException() {
+    void approveBooking_ByWrongUser_ShouldThrowNotFoundException() {
         when(userRepository.findById(wrongUser.getId())).thenReturn(Optional.of(wrongUser));
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
 
-        assertThrows(ForbiddenException.class,
-                () -> bookingService.approveBooking(wrongUser.getId(), booking.getId(), true),
-                "Должно быть выброшено ForbiddenException при попытке подтверждения бронирования не владельцем"
-        );
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> bookingService.approveBooking(wrongUser.getId(), booking.getId(), true));
 
+        assertEquals("Просмотр бронирования доступен только автору или владельцу вещи", exception.getMessage());
         verify(bookingRepository, never()).save(any(Booking.class));
     }
 
@@ -100,6 +100,8 @@ class BookingServiceTest {
         );
 
         verify(bookingRepository).save(any(Booking.class));
+        verify(userRepository, times(1)).findById(owner.getId());
+        verify(bookingRepository, times(1)).findById(booking.getId());
     }
 
     @Test
@@ -107,10 +109,10 @@ class BookingServiceTest {
         Long nonExistentUserId = 999L;
         when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class,
-                () -> bookingService.approveBooking(nonExistentUserId, booking.getId(), true)
-        );
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> bookingService.approveBooking(nonExistentUserId, booking.getId(), true));
 
+        assertEquals("Пользователь с ID " + nonExistentUserId + " не найден", exception.getMessage());
         verify(bookingRepository, never()).findById(anyLong());
         verify(bookingRepository, never()).save(any(Booking.class));
     }
@@ -121,10 +123,24 @@ class BookingServiceTest {
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(bookingRepository.findById(nonExistentBookingId)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class,
-                () -> bookingService.approveBooking(owner.getId(), nonExistentBookingId, true)
-        );
+        NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> bookingService.approveBooking(owner.getId(), nonExistentBookingId, true));
 
+        assertEquals("Бронирование с ID " + nonExistentBookingId + " не найдено", exception.getMessage());
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    void approveBooking_WhenBookingNotInWaitingStatus_ShouldThrowValidationException() {
+        booking.setStatus(Status.APPROVED);
+
+        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
+        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> bookingService.approveBooking(owner.getId(), booking.getId(), true));
+
+        assertEquals("Бронирование уже обработано", exception.getMessage());
         verify(bookingRepository, never()).save(any(Booking.class));
     }
 }
