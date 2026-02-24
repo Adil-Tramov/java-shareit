@@ -2,7 +2,7 @@ set -e
 
 echo "Docker is up"
 
-sleep 10
+sleep 5
 
 ./wait-for-it.sh postgres 5432 -t 60
 
