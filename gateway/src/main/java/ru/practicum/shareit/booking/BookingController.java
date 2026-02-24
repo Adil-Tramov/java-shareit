@@ -60,7 +60,7 @@ public class BookingController {
     @GetMapping("/owner")
     public ResponseEntity<Object> getOwnerBookings(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                    @RequestParam(defaultValue = "ALL") BookingState state) {
-        log.info("Gateway: получение бронирований владельца {}, state={}", userId, state);
+        log.info("Gateway: получение бронирований владельца {}, state={}", userId, state); //Changes not staged for commit:
         return bookingClient.getOwnerBookings(userId, state);
     }
 }
