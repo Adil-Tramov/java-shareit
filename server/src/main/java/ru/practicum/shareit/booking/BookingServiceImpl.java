@@ -11,7 +11,6 @@ import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserRepository;
@@ -43,16 +42,15 @@ public class BookingServiceImpl implements BookingService {
 
         validateBookingDates(bookingRequestDto);
 
-        // СЛУЧАЙ 1: Несуществующий itemId -> 500 Internal Server Error
         Item item = itemRepository.findById(bookingRequestDto.getItemId())
-                .orElseThrow(() -> new RuntimeException("Вещь с ID " + bookingRequestDto.getItemId() + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Вещь с ID " + bookingRequestDto.getItemId() + " не найдена"));
 
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец не может бронировать свою вещь");
         }
 
         if (!item.getAvailable()) {
-            throw new ValidationException("Вещь с ID " + item.getId() + " недоступна для бронирования");
+            throw new IllegalArgumentException("Вещь с ID " + item.getId() + " недоступна для бронирования");
         }
 
         checkBookingOverlap(item.getId(), bookingRequestDto.getStart(), bookingRequestDto.getEnd());
@@ -69,23 +67,26 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
         log.info("Подтверждение бронирования {} пользователем {}, approved={}", bookingId, userId, approved);
 
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
+        }
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с ID " + bookingId + " не найдено"));
 
-        // СЛУЧАЙ 2: Не владелец пытается подтвердить -> 404 Not Found
         if (!booking.getItem().getOwner().getId().equals(userId)) {
+            log.warn("Пользователь {} не является владельцем вещи. Владелец: {}",
+                    userId, booking.getItem().getOwner().getId());
             throw new NotFoundException("Просмотр бронирования доступен только автору или владельцу вещи");
         }
 
         if (!booking.getStatus().equals(Status.WAITING)) {
-            throw new ValidationException("Бронирование уже обработано");
+            throw new IllegalArgumentException("Бронирование уже обработано");
         }
 
         booking.setStatus(approved ? Status.APPROVED : Status.REJECTED);
         Booking updatedBooking = bookingRepository.save(booking);
+        log.info("Бронирование {} обновлено, статус: {}", bookingId, booking.getStatus());
 
         return BookingMapper.toBookingDto(updatedBooking);
     }
@@ -197,13 +198,13 @@ public class BookingServiceImpl implements BookingService {
     private void validateBookingDates(BookingRequestDto bookingRequestDto) {
         if (bookingRequestDto.getEnd().isBefore(bookingRequestDto.getStart()) ||
                 bookingRequestDto.getEnd().equals(bookingRequestDto.getStart())) {
-            throw new ValidationException("Дата окончания бронирования должна быть позже даты начала");
+            throw new IllegalArgumentException("Дата окончания бронирования должна быть позже даты начала");
         }
     }
 
     private void checkBookingOverlap(Long itemId, LocalDateTime start, LocalDateTime end) {
         if (bookingRepository.existsOverlappingBooking(itemId, start, end)) {
-            throw new ValidationException("Указанный период уже забронирован");
+            throw new IllegalArgumentException("Указанный период уже забронирован");
         }
     }
 }

@@ -20,15 +20,15 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<Map<String, String>> handleValidationException(final ValidationException e) {
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(final IllegalArgumentException e) {
         log.error("Ошибка 400: {}", e.getMessage());
         return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(final IllegalArgumentException e) {
-        log.error("Ошибка 400: {}", e.getMessage());
-        return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<Map<String, String>> handleValidationException(final ValidationException e) {
+        log.error("Ошибка валидации: {}", e.getMessage());
+        return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler
@@ -36,18 +36,6 @@ public class ErrorHandler {
         log.error("Ошибка валидации: {}", e.getMessage());
         String errorMessage = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         return new ResponseEntity<>(Map.of("error", errorMessage), HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<Map<String, String>> handleConflictException(final DuplicateEmailException e) {
-        log.error("Ошибка 409: {}", e.getMessage());
-        return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<Map<String, String>> handleRuntimeException(final RuntimeException e) {
-        log.error("Ошибка 500: {}", e.getMessage());
-        return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler

@@ -17,4 +17,16 @@ public class CommentMapper {
                 .created(comment.getCreated())
                 .build();
     }
+
+    public static Comment toComment(CommentDto commentDto) {
+        if (commentDto == null) {
+            return null;
+        }
+
+        Comment comment = new Comment();
+        comment.setId(commentDto.getId());
+        comment.setText(commentDto.getText());
+        comment.setCreated(commentDto.getCreated());
+        return comment;
+    }
 }
