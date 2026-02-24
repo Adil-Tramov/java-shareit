@@ -66,29 +66,85 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
-        log.info("Подтверждение бронирования {} пользователем {}, approved={}", bookingId, userId, approved);
+        log.info("========== НАЧАЛО approveBooking ==========");
+        log.info("Входные параметры - userId: {}, bookingId: {}, approved: {}", userId, bookingId, approved);
 
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+        try {
+            log.info("Шаг 1: Поиск пользователя с ID {}", userId);
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> {
+                        log.error("Пользователь с ID {} не найден в БД", userId);
+                        return new NotFoundException("Пользователь с ID " + userId + " не найден");
+                    });
+            log.info("Пользователь найден: id={}, name={}, email={}", user.getId(), user.getName(), user.getEmail());
 
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Бронирование с ID " + bookingId + " не найдено"));
+            log.info("Шаг 2: Поиск бронирования с ID {}", bookingId);
+            Booking booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() -> {
+                        log.error("Бронирование с ID {} не найдено в БД", bookingId);
+                        return new NotFoundException("Бронирование с ID " + bookingId + " не найдено");
+                    });
+            log.info("Бронирование найдено: id={}, status={}, itemId={}, bookerId={}",
+                    booking.getId(), booking.getStatus(),
+                    booking.getItem().getId(), booking.getBooker().getId());
 
-        if (!booking.getItem().getOwner().getId().equals(userId)) {
-            log.warn("Пользователь {} не является владельцем вещи. Владелец: {}",
-                    userId, booking.getItem().getOwner().getId());
-            throw new NotFoundException("Просмотр бронирования доступен только автору или владельцу вещи");
+            log.info("Шаг 3: Проверка прав доступа");
+            log.info("ID владельца вещи: {}", booking.getItem().getOwner().getId());
+            log.info("ID текущего пользователя: {}", userId);
+
+            if (!booking.getItem().getOwner().getId().equals(userId)) {
+                log.warn("❗️ Пользователь {} НЕ ЯВЛЯЕТСЯ владельцем вещи", userId);
+                log.warn("Владелец вещи: {}", booking.getItem().getOwner().getId());
+                log.warn("Выбрасываем NotFoundException с кодом 404, как ожидают тесты");
+                throw new NotFoundException("Просмотр бронирования доступен только автору или владельцу вещи");
+            }
+            log.info("Права доступа подтверждены - пользователь является владельцем");
+
+            log.info("Шаг 4: Проверка статуса бронирования");
+            log.info("Текущий статус: {}", booking.getStatus());
+
+            if (!booking.getStatus().equals(Status.WAITING)) {
+                log.warn("Бронирование уже обработано, статус: {}", booking.getStatus());
+                throw new ValidationException("Бронирование уже обработано");
+            }
+            log.info("Статус WAITING подтвержден");
+
+            log.info("Шаг 5: Обновление статуса бронирования");
+            Status newStatus = approved ? Status.APPROVED : Status.REJECTED;
+            log.info("Новый статус: {}", newStatus);
+
+            booking.setStatus(newStatus);
+            Booking updatedBooking = bookingRepository.save(booking);
+            log.info("Бронирование сохранено с новым статусом: {}", updatedBooking.getStatus());
+
+            BookingDto result = BookingMapper.toBookingDto(updatedBooking);
+            log.info("Шаг 6: Возвращаем результат: {}", result);
+            log.info("========== КОНЕЦ approveBooking (УСПЕХ) ==========");
+
+            return result;
+
+        } catch (NotFoundException e) {
+            log.error("NotFoundException: {}", e.getMessage());
+            log.error("Тип исключения: {}", e.getClass().getName());
+            log.error("Сообщение: {}", e.getMessage());
+            log.info("========== КОНЕЦ approveBooking (ОШИБКА 404) ==========");
+            throw e;
+
+        } catch (ValidationException e) {
+            log.error("ValidationException: {}", e.getMessage());
+            log.error("Тип исключения: {}", e.getClass().getName());
+            log.error("Сообщение: {}", e.getMessage());
+            log.info("========== КОНЕЦ approveBooking (ОШИБКА 400) ==========");
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Непредвиденное исключение: {}", e.getMessage());
+            log.error("Тип исключения: {}", e.getClass().getName());
+            log.error("Сообщение: {}", e.getMessage());
+            e.printStackTrace();
+            log.info("========== КОНЕЦ approveBooking (НЕИЗВЕСТНАЯ ОШИБКА) ==========");
+            throw e;
         }
-
-        if (!booking.getStatus().equals(Status.WAITING)) {
-            throw new ValidationException("Бронирование уже обработано");
-        }
-
-        booking.setStatus(approved ? Status.APPROVED : Status.REJECTED);
-        Booking updatedBooking = bookingRepository.save(booking);
-        log.info("Бронирование {} обновлено, статус: {}", bookingId, booking.getStatus());
-
-        return BookingMapper.toBookingDto(updatedBooking);
     }
 
     @Override
