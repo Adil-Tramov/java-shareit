@@ -43,6 +43,7 @@ public class BookingServiceImpl implements BookingService {
 
         validateBookingDates(bookingRequestDto);
 
+        // СЛУЧАЙ 1: Несуществующий itemId -> 500 Internal Server Error
         Item item = itemRepository.findById(bookingRequestDto.getItemId())
                 .orElseThrow(() -> new RuntimeException("Вещь с ID " + bookingRequestDto.getItemId() + " не найдена"));
 
@@ -74,9 +75,8 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с ID " + bookingId + " не найдено"));
 
+        // СЛУЧАЙ 2: Не владелец пытается подтвердить -> 404 Not Found
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            log.warn("Пользователь {} не является владельцем вещи. Владелец: {}",
-                    userId, booking.getItem().getOwner().getId());
             throw new NotFoundException("Просмотр бронирования доступен только автору или владельцу вещи");
         }
 
