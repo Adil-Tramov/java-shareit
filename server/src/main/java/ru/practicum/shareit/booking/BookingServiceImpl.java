@@ -68,16 +68,17 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
         log.info("Подтверждение бронирования {} пользователем {}, approved={}", bookingId, userId, approved);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
+        }
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с ID " + bookingId + " не найдено"));
 
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            log.warn("Пользователь {} не является владельцем вещи {}. Владелец: {}",
-                    userId, booking.getItem().getId(), booking.getItem().getOwner().getId());
-            throw new ForbiddenException("Только владелец вещи может подтверждать бронирование");
+            log.warn("Пользователь {} не является владельцем вещи. Владелец: {}",
+                    userId, booking.getItem().getOwner().getId());
+            throw new NotFoundException("Просмотр бронирования доступен только автору или владельцу вещи");
         }
 
         if (!booking.getStatus().equals(Status.WAITING)) {

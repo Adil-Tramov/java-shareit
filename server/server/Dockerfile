@@ -1,4 +1,3 @@
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre-jammy
 COPY target/*.jar app.jar
-RUN echo "JAR file size:" && ls -la app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]

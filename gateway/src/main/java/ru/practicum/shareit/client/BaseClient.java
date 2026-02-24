@@ -58,41 +58,15 @@ public class BaseClient {
                                                           Map<String, Object> parameters, T body) {
         HttpEntity<T> requestEntity = new HttpEntity<>(body, defaultHeaders(userId));
 
-        // ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ
-        System.out.println("\n========== GATEWAY REQUEST DEBUG ==========");
-        System.out.println("Method: " + method);
-        System.out.println("Full URL to server: http://localhost:9090" + path);
-        System.out.println("Path: " + path);
-        System.out.println("User ID: " + userId);
-        System.out.println("Parameters: " + parameters);
-        System.out.println("Request Body: " + (body != null ? body : "null"));
-        System.out.println("==========================================\n");
-
-        ResponseEntity<Object> shareitServerResponse;
         try {
             if (parameters != null) {
-                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
+                return rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
-                shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class);
+                return rest.exchange(path, method, requestEntity, Object.class);
             }
-
-            System.out.println("\n========== SERVER RESPONSE ==========");
-            System.out.println("Status code: " + shareitServerResponse.getStatusCode());
-            System.out.println("Status value: " + shareitServerResponse.getStatusCode().value());
-            System.out.println("Response body: " + shareitServerResponse.getBody());
-            System.out.println("======================================\n");
-
         } catch (HttpStatusCodeException e) {
-            System.out.println("\n========== SERVER EXCEPTION ==========");
-            System.out.println("Exception status code: " + e.getStatusCode());
-            System.out.println("Exception status value: " + e.getStatusCode().value());
-            System.out.println("Exception response body: " + e.getResponseBodyAsString());
-            System.out.println("Exception headers: " + e.getResponseHeaders());
-            System.out.println("======================================\n");
-
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         }
-        return prepareGatewayResponse(shareitServerResponse);
     }
 
     private HttpHeaders defaultHeaders(Long userId) {

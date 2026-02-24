@@ -2,19 +2,19 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import ru.practicum.shareit.item.model.Comment;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
@@ -42,8 +42,7 @@ public class ItemServiceImpl implements ItemService {
         log.info("Создание вещи пользователем {}", userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Пользователь с ID " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
 
         validateItemData(itemDto);
 
@@ -60,17 +59,14 @@ public class ItemServiceImpl implements ItemService {
         log.info("Обновление вещи {} пользователем {}", itemId, userId);
 
         if (!userRepository.existsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Пользователь с ID " + userId + " не найден");
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
         }
 
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Вещь с ID " + itemId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
 
         if (!item.getOwner().getId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Пользователь с ID " + userId + " не является владельцем вещи");
+            throw new NotFoundException("Пользователь с ID " + userId + " не является владельцем вещи");
         }
 
         // Обновление полей
@@ -95,8 +91,7 @@ public class ItemServiceImpl implements ItemService {
         log.info("Получение вещи {} пользователем {}", itemId, userId);
 
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Вещь с ID " + itemId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
 
         List<CommentDto> comments = commentRepository.findAllByItemId(itemId).stream()
                 .map(CommentMapper::toCommentDto)
@@ -128,8 +123,7 @@ public class ItemServiceImpl implements ItemService {
         log.info("Получение всех вещей пользователя {}", userId);
 
         if (!userRepository.existsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Пользователь с ID " + userId + " не найден");
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
         }
 
         List<Item> items = itemRepository.findAllByOwnerIdOrderByIdAsc(userId);
@@ -195,13 +189,12 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto addComment(Long userId, Long itemId, CommentRequestDto commentRequestDto) {
         log.info("Добавление комментария к вещи {} пользователем {}", itemId, userId);
 
-        User author = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Пользователь с ID " + userId + " не найден"));
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
+        }
 
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Вещь с ID " + itemId + " не найдена"));
+                .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -210,14 +203,15 @@ public class ItemServiceImpl implements ItemService {
                         userId, itemId, now, Status.APPROVED);
 
         if (completedBookings.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Пользователь может оставить отзыв только после завершения аренды вещи");
+            throw new ValidationException("Пользователь может оставить отзыв только после завершения аренды вещи");
         }
 
         if (commentRequestDto.getText() == null || commentRequestDto.getText().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Текст комментария не может быть пустым");
+            throw new IllegalArgumentException("Текст комментария не может быть пустым");
         }
+
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
 
         Comment comment = new Comment();
         comment.setText(commentRequestDto.getText());
@@ -233,13 +227,13 @@ public class ItemServiceImpl implements ItemService {
 
     private void validateItemData(ItemDto itemDto) {
         if (itemDto.getName() == null || itemDto.getName().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Название не может быть пустым");
+            throw new IllegalArgumentException("Название не может быть пустым");
         }
         if (itemDto.getDescription() == null || itemDto.getDescription().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Описание не может быть пустым");
+            throw new IllegalArgumentException("Описание не может быть пустым");
         }
         if (itemDto.getAvailable() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Статус доступности должен быть указан");
+            throw new IllegalArgumentException("Статус доступности должен быть указан");
         }
     }
 
