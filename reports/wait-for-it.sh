@@ -2,7 +2,7 @@
 set -e
 
 host="$1"
-port="$2"
+port="${2:-5432}"
 timeout="${3:-60}"
 shift 3
 cmd="$@"
