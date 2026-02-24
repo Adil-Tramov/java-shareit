@@ -2,8 +2,9 @@ package ru.practicum.shareit.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
@@ -13,16 +14,15 @@ import java.util.Map;
 public class ErrorHandler {
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleIllegalArgumentException(final IllegalArgumentException e) {
-        log.error("Ошибка 400: {}", e.getMessage());
-        return Map.of("error", e.getMessage());
+    public ResponseEntity<Map<String, String>> handleMethodArgumentNotValid(final MethodArgumentNotValidException e) {
+        log.error("Ошибка валидации: {}", e.getMessage());
+        String errorMessage = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+        return new ResponseEntity<>(Map.of("error", errorMessage), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, String> handleThrowable(final Throwable e) {
-        log.error("Ошибка 500: {}", e.getMessage(), e);
-        return Map.of("error", "Произошла непредвиденная ошибка");
+    public ResponseEntity<Map<String, String>> handleThrowable(final Throwable e) {
+        log.error("Ошибка: {}", e.getMessage());
+        return new ResponseEntity<>(Map.of("error", "Произошла ошибка"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

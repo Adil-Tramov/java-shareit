@@ -33,7 +33,7 @@ public class ItemController {
 
     @PatchMapping("/{itemId}")
     public ResponseEntity<Object> updateItem(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                             @PathVariable("itemId") Long itemId,
+                                             @PathVariable Long itemId,
                                              @Valid @RequestBody ItemUpdateDto itemUpdateDto) {
         log.info("Gateway: обновление вещи {} пользователем {}", itemId, userId);
         return itemClient.updateItem(userId, itemId, itemUpdateDto);
@@ -41,7 +41,7 @@ public class ItemController {
 
     @GetMapping("/{itemId}")
     public ResponseEntity<Object> getItemById(@RequestHeader(value = "X-Sharer-User-Id", required = false) Long userId,
-                                              @PathVariable("itemId") Long itemId) {
+                                              @PathVariable Long itemId) {
         log.info("Gateway: получение вещи {} пользователем {}", itemId, userId);
         return itemClient.getItemById(userId, itemId);
     }
@@ -53,14 +53,14 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Object> searchItems(@RequestParam("text") String text) {
+    public ResponseEntity<Object> searchItems(@RequestParam String text) {
         log.info("Gateway: поиск вещей по запросу '{}'", text);
         return itemClient.searchItems(text);
     }
 
     @PostMapping("/{itemId}/comment")
     public ResponseEntity<Object> addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                             @PathVariable("itemId") Long itemId,
+                                             @PathVariable Long itemId,
                                              @Valid @RequestBody CommentCreateDto commentCreateDto) {
         log.info("Gateway: добавление комментария к вещи {} пользователем {}", itemId, userId);
         return itemClient.addComment(userId, itemId, commentCreateDto);

@@ -3,10 +3,10 @@ package ru.practicum.shareit.request;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.ItemMapper;
+import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ItemRequestServiceImpl implements ItemRequestService {
+
     private final ItemRequestRepository requestRepository;
     private final UserRepository userRepository;
     private final ItemRepository itemRepository;
@@ -39,7 +40,13 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         log.info("Создание запроса от пользователя {}", userId);
 
         User requestor = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Пользователь не найден"));
+
+        if (createDto.getDescription() == null || createDto.getDescription().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Описание запроса не может быть пустым");
+        }
 
         ItemRequest request = new ItemRequest();
         request.setDescription(createDto.getDescription());
@@ -57,7 +64,8 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         log.info("Получение запросов пользователя {}", userId);
 
         if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Пользователь не найден");
         }
 
         List<ItemRequest> requests = requestRepository.findAllByRequestorId(userId, SORT_BY_CREATED_DESC);
@@ -69,7 +77,13 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         log.info("Получение всех запросов, пользователь {}, from={}, size={}", userId, from, size);
 
         if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Пользователь не найден");
+        }
+
+        if (from < 0 || size <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Параметры пагинации должны быть положительными");
         }
 
         List<ItemRequest> requests = requestRepository.findAllByRequestorIdNot(userId, SORT_BY_CREATED_DESC);
@@ -89,15 +103,17 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         log.info("Получение запроса {} пользователем {}", requestId, userId);
 
         if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь не найден");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Пользователь не найден");
         }
 
         ItemRequest request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException("Запрос не найден"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Запрос не найден"));
 
         List<Item> items = itemRepository.findAllByRequestId(requestId);
         List<ItemDto> itemDtos = items.stream()
-                .map(ItemMapper::toItemDto)
+                .map(this::mapToItemDto)
                 .collect(Collectors.toList());
 
         return mapToDto(request, itemDtos);
@@ -117,7 +133,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         Map<Long, List<ItemDto>> itemsByRequestId = items.stream()
                 .collect(Collectors.groupingBy(
                         Item::getRequestId,
-                        Collectors.mapping(ItemMapper::toItemDto, Collectors.toList())
+                        Collectors.mapping(this::mapToItemDto, Collectors.toList())
                 ));
 
         return requests.stream()
@@ -126,6 +142,17 @@ public class ItemRequestServiceImpl implements ItemRequestService {
                         itemsByRequestId.getOrDefault(request.getId(), Collections.emptyList())
                 ))
                 .collect(Collectors.toList());
+    }
+
+    private ItemDto mapToItemDto(Item item) {
+        return ItemDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .ownerId(item.getOwner().getId())
+                .requestId(item.getRequestId())
+                .build();
     }
 
     private ItemRequestDto mapToDto(ItemRequest request, List<ItemDto> items) {

@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,14 +30,14 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public UserDto updateUser(@PathVariable("userId") Long userId,
+    public UserDto updateUser(@PathVariable Long userId,
                               @RequestBody UserDto userDto) {
         log.info("PATCH /users/{}", userId);
         return userService.updateUser(userId, userDto);
     }
 
     @GetMapping("/{userId}")
-    public UserDto getUserById(@PathVariable("userId") Long userId) {
+    public UserDto getUserById(@PathVariable Long userId) {
         log.info("GET /users/{}", userId);
         return userService.getUserById(userId);
     }
@@ -50,7 +50,7 @@ public class UserController {
 
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable("userId") Long userId) {
+    public void deleteUser(@PathVariable Long userId) {
         log.info("DELETE /users/{}", userId);
         userService.deleteUser(userId);
     }
