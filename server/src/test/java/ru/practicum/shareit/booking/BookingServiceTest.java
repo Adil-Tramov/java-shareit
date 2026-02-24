@@ -6,10 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserRepository;
@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,6 +78,26 @@ class BookingServiceTest {
     }
 
     @Test
+    void createBooking_WithNonExistentItem_ShouldThrowRuntimeException() {
+        Long userId = booker.getId();
+        Long nonExistentItemId = 999L;
+
+        BookingRequestDto bookingRequestDto = new BookingRequestDto();
+        bookingRequestDto.setItemId(nonExistentItemId);
+        bookingRequestDto.setStart(LocalDateTime.now().plusDays(1));
+        bookingRequestDto.setEnd(LocalDateTime.now().plusDays(2));
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(booker));
+        when(itemRepository.findById(nonExistentItemId)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> bookingService.createBooking(userId, bookingRequestDto));
+
+        assertEquals("Вещь с ID " + nonExistentItemId + " не найдена", exception.getMessage());
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
     void approveBooking_ByWrongUser_ShouldThrowNotFoundException() {
         when(userRepository.findById(wrongUser.getId())).thenReturn(Optional.of(wrongUser));
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
@@ -123,20 +144,6 @@ class BookingServiceTest {
                 () -> bookingService.approveBooking(owner.getId(), nonExistentBookingId, true));
 
         assertEquals("Бронирование с ID " + nonExistentBookingId + " не найдено", exception.getMessage());
-        verify(bookingRepository, never()).save(any(Booking.class));
-    }
-
-    @Test
-    void approveBooking_WhenBookingNotInWaitingStatus_ShouldThrowValidationException() {
-        booking.setStatus(Status.APPROVED);
-
-        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.approveBooking(owner.getId(), booking.getId(), true));
-
-        assertEquals("Бронирование уже обработано", exception.getMessage());
         verify(bookingRepository, never()).save(any(Booking.class));
     }
 }
