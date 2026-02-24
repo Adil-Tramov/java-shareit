@@ -38,36 +38,30 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto createBooking(Long userId, BookingRequestDto bookingRequestDto) {
         log.info("Создание бронирования пользователем {}", userId);
 
-        // Проверка пользователя
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Пользователь с ID " + userId + " не найден"));
 
-        // Проверка вещи - ВАЖНО: должна возвращать 404, если вещь не найдена
         Item item = itemRepository.findById(bookingRequestDto.getItemId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Вещь с ID " + bookingRequestDto.getItemId() + " не найдена"));
 
-        // Проверка доступности вещи
         if (!item.getAvailable()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Вещь с ID " + item.getId() + " недоступна для бронирования");
         }
 
-        // Проверка, что владелец не бронирует свою вещь
         if (item.getOwner().getId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Владелец не может бронировать свою вещь");
         }
 
-        // Проверка дат
         if (bookingRequestDto.getEnd().isBefore(bookingRequestDto.getStart()) ||
                 bookingRequestDto.getEnd().equals(bookingRequestDto.getStart())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Дата окончания бронирования должна быть позже даты начала");
         }
 
-        // Проверка пересечений
         if (bookingRepository.existsOverlappingBooking(item.getId(),
                 bookingRequestDto.getStart(), bookingRequestDto.getEnd())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -86,15 +80,25 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
         log.info("Подтверждение бронирования {} пользователем {}", bookingId, userId);
 
+        // Проверка существования бронирования
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Бронирование с ID " + bookingId + " не найдено"));
 
-        if (!booking.getItem().getOwner().getId().equals(userId)) {
+        // Проверка, что пользователь существует
+        if (!userRepository.existsById(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Только владелец вещи может подтверждать бронирование");
+                    "Пользователь с ID " + userId + " не найден");
         }
 
+        // Проверка, что пользователь является владельцем вещи
+        if (!booking.getItem().getOwner().getId().equals(userId)) {
+            // ВАЖНО: здесь должен быть 404, а не 403
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Только владелец может подтверждать бронирование");
+        }
+
+        // Проверка статуса бронирования
         if (!booking.getStatus().equals(Status.WAITING)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Бронирование уже обработано");
@@ -110,7 +114,6 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto getBookingById(Long userId, Long bookingId) {
         log.info("Получение бронирования {} пользователем {}", bookingId, userId);
 
-        // Проверка пользователя
         if (!userRepository.existsById(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Пользователь с ID " + userId + " не найден");
