@@ -44,7 +44,7 @@ public class BookingServiceImpl implements BookingService {
         validateBookingDates(bookingRequestDto);
 
         Item item = itemRepository.findById(bookingRequestDto.getItemId())
-                .orElseThrow(() -> new NotFoundException("Вещь с ID " + bookingRequestDto.getItemId() + " не найдена"));
+                .orElseThrow(() -> new RuntimeException("Вещь с ID " + bookingRequestDto.getItemId() + " не найдена"));
 
         if (item.getOwner().getId().equals(userId)) {
             throw new NotFoundException("Владелец не может бронировать свою вещь");
