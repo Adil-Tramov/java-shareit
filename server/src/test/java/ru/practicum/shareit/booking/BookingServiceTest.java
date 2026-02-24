@@ -18,9 +18,10 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -85,6 +86,8 @@ class BookingServiceTest {
                 () -> bookingService.approveBooking(wrongUser.getId(), booking.getId(), true),
                 "Должно быть выброшено ForbiddenException при попытке подтверждения бронирования не владельцем"
         );
+
+        verify(bookingRepository, never()).save(any(Booking.class));
     }
 
     @Test
@@ -93,8 +96,11 @@ class BookingServiceTest {
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
 
-        bookingService.approveBooking(owner.getId(), booking.getId(), true);
+        assertDoesNotThrow(() ->
+                bookingService.approveBooking(owner.getId(), booking.getId(), true)
+        );
 
+        verify(bookingRepository).save(any(Booking.class));
     }
 
     @Test
@@ -105,6 +111,9 @@ class BookingServiceTest {
         assertThrows(NotFoundException.class,
                 () -> bookingService.approveBooking(nonExistentUserId, booking.getId(), true)
         );
+
+        verify(bookingRepository, never()).findById(anyLong());
+        verify(bookingRepository, never()).save(any(Booking.class));
     }
 
     @Test
@@ -116,5 +125,7 @@ class BookingServiceTest {
         assertThrows(NotFoundException.class,
                 () -> bookingService.approveBooking(owner.getId(), nonExistentBookingId, true)
         );
+
+        verify(bookingRepository, never()).save(any(Booking.class));
     }
 }

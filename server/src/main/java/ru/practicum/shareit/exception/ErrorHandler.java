@@ -26,15 +26,15 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(final IllegalArgumentException e) {
-        log.error("Ошибка 400: {}", e.getMessage());
+    public ResponseEntity<Map<String, String>> handleValidationException(final ValidationException e) {
+        log.error("Ошибка валидации 400: {}", e.getMessage());
         return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<Map<String, String>> handleValidationException(final ValidationException e) {
-        log.error("Ошибка валидации: {}", e.getMessage());
-        return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.CONFLICT);
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(final IllegalArgumentException e) {
+        log.error("Ошибка 400: {}", e.getMessage());
+        return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
