@@ -14,6 +14,12 @@ import java.util.Map;
 public class ErrorHandler {
 
     @ExceptionHandler
+    public ResponseEntity<Map<String, String>> handleForbiddenException(final ForbiddenException e) {
+        log.error("Ошибка 403: {}", e.getMessage());
+        return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler
     public ResponseEntity<Map<String, String>> handleNotFoundException(final NotFoundException e) {
         log.error("Ошибка 404: {}", e.getMessage());
         return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.NOT_FOUND);
