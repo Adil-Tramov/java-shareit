@@ -205,7 +205,7 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Пользователь может оставить отзыв только после завершения аренды вещи");
         }
 
-        if (commentRequestDto.getText() == null || commentRequestDto.getText().trim().isEmpty()) {
+        if (commentRequestDto.getText() == null || commentRequestDto.getText().isBlank()) {
             throw new ValidationException("Текст комментария не может быть пустым");
         }
 
@@ -216,7 +216,6 @@ public class ItemServiceImpl implements ItemService {
         comment.setCreated(now);
 
         Comment savedComment = commentRepository.save(comment);
-        log.info("Комментарий добавлен с ID {}", savedComment.getId());
 
         return CommentMapper.toCommentDto(savedComment);
     }
