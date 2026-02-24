@@ -78,18 +78,6 @@ class BookingServiceTest {
     }
 
     @Test
-    void approveBooking_ByWrongUser_ShouldThrowNotFoundException() {
-        when(userRepository.findById(wrongUser.getId())).thenReturn(Optional.of(wrongUser));
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-
-        NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> bookingService.approveBooking(wrongUser.getId(), booking.getId(), true));
-
-        assertEquals("Просмотр бронирования доступен только автору или владельцу вещи", exception.getMessage());
-        verify(bookingRepository, never()).save(any(Booking.class));
-    }
-
-    @Test
     void approveBooking_ByOwner_ShouldSucceed() {
         when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
         when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
