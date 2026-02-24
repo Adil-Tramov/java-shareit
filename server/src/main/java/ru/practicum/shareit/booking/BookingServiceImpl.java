@@ -10,7 +10,6 @@ import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
-import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.ItemRepository;
@@ -69,7 +68,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
         log.info("Подтверждение бронирования {} пользователем {}, approved={}", bookingId, userId, approved);
 
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
 
         Booking booking = bookingRepository.findById(bookingId)
@@ -78,7 +77,7 @@ public class BookingServiceImpl implements BookingService {
         if (!booking.getItem().getOwner().getId().equals(userId)) {
             log.warn("Пользователь {} не является владельцем вещи. Владелец: {}",
                     userId, booking.getItem().getOwner().getId());
-            throw new ForbiddenException("Только владелец вещи может подтверждать бронирование");
+            throw new NotFoundException("Просмотр бронирования доступен только автору или владельцу вещи");
         }
 
         if (!booking.getStatus().equals(Status.WAITING)) {

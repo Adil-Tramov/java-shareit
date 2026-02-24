@@ -20,12 +20,6 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<Map<String, String>> handleForbiddenException(final ForbiddenException e) {
-        log.error("Ошибка 403: {}", e.getMessage());
-        return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.FORBIDDEN);
-    }
-
-    @ExceptionHandler
     public ResponseEntity<Map<String, String>> handleValidationException(final ValidationException e) {
         log.error("Ошибка валидации 400: {}", e.getMessage());
         return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
