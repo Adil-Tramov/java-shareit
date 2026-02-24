@@ -189,9 +189,8 @@ public class ItemServiceImpl implements ItemService {
     public CommentDto addComment(Long userId, Long itemId, CommentRequestDto commentRequestDto) {
         log.info("Добавление комментария к вещи {} пользователем {}", itemId, userId);
 
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с ID " + userId + " не найден");
-        }
+        User author = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
 
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Вещь с ID " + itemId + " не найдена"));
@@ -206,12 +205,9 @@ public class ItemServiceImpl implements ItemService {
             throw new ValidationException("Пользователь может оставить отзыв только после завершения аренды вещи");
         }
 
-        if (commentRequestDto.getText() == null || commentRequestDto.getText().isBlank()) {
-            throw new IllegalArgumentException("Текст комментария не может быть пустым");
+        if (commentRequestDto.getText() == null || commentRequestDto.getText().trim().isEmpty()) {
+            throw new ValidationException("Текст комментария не может быть пустым");
         }
-
-        User author = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с ID " + userId + " не найден"));
 
         Comment comment = new Comment();
         comment.setText(commentRequestDto.getText());

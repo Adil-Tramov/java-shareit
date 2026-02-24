@@ -93,7 +93,7 @@ public class BookingServiceImpl implements BookingService {
             log.info("ID текущего пользователя: {}", userId);
 
             if (!booking.getItem().getOwner().getId().equals(userId)) {
-                log.warn("❗️ Пользователь {} НЕ ЯВЛЯЕТСЯ владельцем вещи", userId);
+                log.warn("Пользователь {} НЕ ЯВЛЯЕТСЯ владельцем вещи", userId);
                 log.warn("Владелец вещи: {}", booking.getItem().getOwner().getId());
                 log.warn("Выбрасываем NotFoundException с кодом 404, как ожидают тесты");
                 throw new NotFoundException("Просмотр бронирования доступен только автору или владельцу вещи");
@@ -118,7 +118,7 @@ public class BookingServiceImpl implements BookingService {
             log.info("Бронирование сохранено с новым статусом: {}", updatedBooking.getStatus());
 
             BookingDto result = BookingMapper.toBookingDto(updatedBooking);
-            log.info("Шаг 6: Возвращаем результат: {}", result);
+            log.info("Шаг 6: Возвращаем результат");
             log.info("========== КОНЕЦ approveBooking (УСПЕХ) ==========");
 
             return result;
@@ -126,23 +126,23 @@ public class BookingServiceImpl implements BookingService {
         } catch (NotFoundException e) {
             log.error("NotFoundException: {}", e.getMessage());
             log.error("Тип исключения: {}", e.getClass().getName());
-            log.error("Сообщение: {}", e.getMessage());
+            log.error("Статус код: 404 Not Found");
             log.info("========== КОНЕЦ approveBooking (ОШИБКА 404) ==========");
             throw e;
 
         } catch (ValidationException e) {
             log.error("ValidationException: {}", e.getMessage());
             log.error("Тип исключения: {}", e.getClass().getName());
-            log.error("Сообщение: {}", e.getMessage());
+            log.error("Статус код: 400 Bad Request");
             log.info("========== КОНЕЦ approveBooking (ОШИБКА 400) ==========");
             throw e;
 
         } catch (Exception e) {
             log.error("Непредвиденное исключение: {}", e.getMessage());
             log.error("Тип исключения: {}", e.getClass().getName());
-            log.error("Сообщение: {}", e.getMessage());
+            log.error("Статус код: 500 Internal Server Error");
             e.printStackTrace();
-            log.info("========== КОНЕЦ approveBooking (НЕИЗВЕСТНАЯ ОШИБКА) ==========");
+            log.info("========== КОНЕЦ approveBooking (ОШИБКА 500) ==========");
             throw e;
         }
     }
@@ -252,6 +252,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void validateBookingDates(BookingRequestDto bookingRequestDto) {
+        if (bookingRequestDto.getStart() == null) {
+            throw new ValidationException("Дата начала бронирования должна быть указана");
+        }
+        if (bookingRequestDto.getEnd() == null) {
+            throw new ValidationException("Дата окончания бронирования должна быть указана");
+        }
         if (bookingRequestDto.getEnd().isBefore(bookingRequestDto.getStart()) ||
                 bookingRequestDto.getEnd().equals(bookingRequestDto.getStart())) {
             throw new ValidationException("Дата окончания бронирования должна быть позже даты начала");
