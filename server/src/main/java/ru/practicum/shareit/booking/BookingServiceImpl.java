@@ -80,25 +80,20 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto approveBooking(Long userId, Long bookingId, Boolean approved) {
         log.info("Подтверждение бронирования {} пользователем {}", bookingId, userId);
 
-        // Проверка существования бронирования
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Бронирование с ID " + bookingId + " не найдено"));
 
-        // Проверка, что пользователь существует
         if (!userRepository.existsById(userId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Пользователь с ID " + userId + " не найден");
         }
 
-        // Проверка, что пользователь является владельцем вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // ВАЖНО: здесь должен быть 404, а не 403
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "Только владелец может подтверждать бронирование");
         }
 
-        // Проверка статуса бронирования
         if (!booking.getStatus().equals(Status.WAITING)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Бронирование уже обработано");
