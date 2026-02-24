@@ -4,13 +4,13 @@ services:
     image: postgres:13.7-alpine
     container_name: shareit-db-postgres
     ports:
-      - "6541:5432"
+      - "5432:5432"
     environment:
       - POSTGRES_DB=shareit
-      - POSTGRES_USER=shareit_user
-      - POSTGRES_PASSWORD=shareit_pass
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=user_user
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shareit_user -d shareit"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shareit"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,11 +30,14 @@ services:
         condition: service_healthy
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
-      - SPRING_DATASOURCE_USERNAME=shareit_user
-      - SPRING_DATASOURCE_PASSWORD=shareit_pass
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=user_user
       - SPRING_JPA_HIBERNATE_DDL_AUTO=none
       - SPRING_SQL_INIT_MODE=always
       - SERVER_PORT=9090
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=DEBUG
+      - LOGGING_LEVEL_RU_PRACTICUM_SHAREIT=DEBUG
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9090/actuator/health"]
       interval: 30s
