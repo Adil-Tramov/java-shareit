@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.shareit.exception.NotFoundException;
@@ -17,6 +18,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 @Sql(scripts = {"/schema.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class ItemServiceImplIntegrationTest {
@@ -129,8 +131,7 @@ class ItemServiceImplIntegrationTest {
 
     @Test
     void addComment_ShouldAddComment() {
-        // Создаем бронирование и добавляем комментарий
         // Этот тест требует наличия BookingService
-        // Пока пропускаем или добавляем позже
+        // Пропускаем или реализуем позже
     }
 }

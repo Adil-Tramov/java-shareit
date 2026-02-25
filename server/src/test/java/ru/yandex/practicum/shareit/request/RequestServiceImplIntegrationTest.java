@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.shareit.item.dto.ItemDto;
@@ -18,6 +19,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 @Sql(scripts = {"/schema.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class RequestServiceImplIntegrationTest {
@@ -91,7 +93,6 @@ class RequestServiceImplIntegrationTest {
     void getRequestById_WithItems_ShouldIncludeItems() {
         ItemRequestDto request = requestService.createRequest(user1.getId(), "Need a drill");
 
-        // Здесь используется ItemDto - нужен импорт
         itemService.createItem(user2.getId(), ItemDto.builder()
                 .name("Drill")
                 .description("Powerful drill")
