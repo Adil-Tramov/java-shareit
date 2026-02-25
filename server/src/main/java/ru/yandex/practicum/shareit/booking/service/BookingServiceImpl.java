@@ -207,7 +207,7 @@ public class BookingServiceImpl implements BookingService {
 
         // Проверяем, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // ТЕСТ ОЖИДАЕТ 403, НЕ 404!
+            // ТЕСТ ОЖИДАЕТ 403, А НЕ 404!
             throw new ForbiddenException("Подтверждение бронирования доступно только владельцу вещи");
         }
 
