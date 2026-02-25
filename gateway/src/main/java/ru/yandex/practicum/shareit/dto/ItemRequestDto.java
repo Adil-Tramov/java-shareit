@@ -14,7 +14,7 @@ import java.util.List;
 public class ItemRequestDto {
     private Long id;
 
-    @NotBlank(message = "Описание запроса не может быть пустым")
+    @NotBlank(message = "описание не может быть пустым")
     private String description;
 
     private Long requestorId;

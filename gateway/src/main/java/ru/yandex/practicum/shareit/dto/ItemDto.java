@@ -12,13 +12,13 @@ import lombok.NoArgsConstructor;
 public class ItemDto {
     private Long id;
 
-    @NotBlank(message = "Название не может быть пустым")
+    @NotBlank(message = "название не может быть пустым")
     private String name;
 
-    @NotBlank(message = "Описание не может быть пустым")
+    @NotBlank(message = "описание не может быть пустым")
     private String description;
 
-    @NotNull(message = "Статус доступности должен быть указан")
+    @NotNull(message = "статус доступности должен быть указан")
     private Boolean available;
 
     private Long requestId;

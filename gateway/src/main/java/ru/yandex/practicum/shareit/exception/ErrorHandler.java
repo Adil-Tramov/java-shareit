@@ -21,19 +21,24 @@ public class ErrorHandler {
                 errors.put(error.getField(), error.getDefaultMessage())
         );
         log.error("Validation error: {}", errors);
+
+        // Возвращаем только ошибки валидации, без лишних полей
         return ResponseEntity.badRequest().body(errors);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
         log.error("Illegal argument: {}", ex.getMessage());
-        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleException(Exception ex) {
         log.error("Internal server error: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Произошла внутренняя ошибка сервера"));
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Произошла внутренняя ошибка сервера");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

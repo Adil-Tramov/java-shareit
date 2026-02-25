@@ -43,7 +43,7 @@ public class RequestController {
     @PostMapping
     public ResponseEntity<Object> createRequest(@RequestHeader("X-Sharer-User-Id") long userId,
                                                 @Valid @RequestBody ItemRequestDto requestDto) {
-        log.info("Gateway: Creating request {} for user: {}", requestDto, userId);
+        log.info("Gateway: Creating request for user: {} with description: {}", userId, requestDto.getDescription());
         return requestClient.createRequest(userId, requestDto);
     }
 }
