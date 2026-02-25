@@ -62,7 +62,7 @@ class BookingControllerTest {
                 .thenReturn(List.of(bookingDto));
 
         mockMvc.perform(get("/bookings")
-                        .header("X-Sharer-User-Id", 1))
+                        .header("X-Sharer-User-Id", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
     }
@@ -73,7 +73,7 @@ class BookingControllerTest {
                 .thenReturn(List.of(bookingDto));
 
         mockMvc.perform(get("/bookings/owner")
-                        .header("X-Sharer-User-Id", 1))
+                        .header("X-Sharer-User-Id", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
     }
@@ -83,7 +83,7 @@ class BookingControllerTest {
         when(bookingService.getBookingById(1L, 1L)).thenReturn(bookingDto);
 
         mockMvc.perform(get("/bookings/1")
-                        .header("X-Sharer-User-Id", 1))
+                        .header("X-Sharer-User-Id", 1L))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1));
     }
@@ -91,20 +91,20 @@ class BookingControllerTest {
     @Test
     void getBookingById_WithInvalidId_ShouldReturn404() throws Exception {
         when(bookingService.getBookingById(1L, 99L))
-                .thenThrow(new NotFoundException("Booking not found"));
+                .thenThrow(new NotFoundException("Бронирование с id 99 не найдено"));
 
         mockMvc.perform(get("/bookings/99")
-                        .header("X-Sharer-User-Id", 1))
+                        .header("X-Sharer-User-Id", 1L))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void createBooking_WithValidData_ShouldReturnBooking() throws Exception {
-        when(bookingService.createBooking(eq(2L), anyLong(), any(), any()))
+        when(bookingService.createBooking(eq(2L), eq(1L), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(bookingDto);
 
         mockMvc.perform(post("/bookings")
-                        .header("X-Sharer-User-Id", 2)
+                        .header("X-Sharer-User-Id", 2L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookingCreateDto)))
                 .andExpect(status().isOk())
@@ -116,9 +116,20 @@ class BookingControllerTest {
         when(bookingService.approveBooking(1L, 1L, true)).thenReturn(bookingDto);
 
         mockMvc.perform(patch("/bookings/1")
-                        .header("X-Sharer-User-Id", 1)
+                        .header("X-Sharer-User-Id", 1L)
                         .param("approved", "true"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1));
+    }
+
+    @Test
+    void approveBooking_ByNonOwner_ShouldReturn404() throws Exception {
+        when(bookingService.approveBooking(2L, 1L, true))
+                .thenThrow(new NotFoundException("Подтверждение бронирования доступно только владельцу вещи"));
+
+        mockMvc.perform(patch("/bookings/1")
+                        .header("X-Sharer-User-Id", 2L)
+                        .param("approved", "true"))
+                .andExpect(status().isNotFound());
     }
 }
