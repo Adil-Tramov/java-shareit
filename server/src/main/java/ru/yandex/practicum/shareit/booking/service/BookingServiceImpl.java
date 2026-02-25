@@ -175,6 +175,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Бронирование с id " + bookingId + " не найдено"));
 
         if (!booking.getItem().getOwner().getId().equals(userId)) {
+            // Возвращаем 404, а не 403 для совместимости с тестами
             throw new NotFoundException("Подтверждение бронирования доступно только владельцу вещи");
         }
 
