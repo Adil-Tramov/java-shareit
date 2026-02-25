@@ -88,8 +88,7 @@ public class BaseClient {
             }
             return prepareGatewayResponse(shareitServerResponse);
         } catch (HttpStatusCodeException e) {
-            // Пробрасываем исключение дальше, чтобы ErrorHandler мог его обработать
-            // и вернуть правильный статус код
+            // Пробрасываем исключение, чтобы ErrorHandler его обработал
             throw e;
         }
     }

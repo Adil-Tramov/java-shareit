@@ -37,18 +37,17 @@ public class ErrorHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
-    // Обработка HTTP статусов от сервера
+    // Обработка HTTP статусов от сервера - ЭТО РЕШАЕТ ПРОБЛЕМУ 403
     @ExceptionHandler(HttpStatusCodeException.class)
     public ResponseEntity<Map<String, String>> handleHttpStatusCodeException(HttpStatusCodeException ex) {
         log.error("HTTP error from server: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
 
         Map<String, String> error = new HashMap<>();
 
-        // Пытаемся извлечь сообщение об ошибке из ответа сервера
         try {
-            // Если ответ содержит JSON с полем "error", используем его
             String responseBody = ex.getResponseBodyAsString();
             if (responseBody != null && !responseBody.isEmpty()) {
+                // Пытаемся извлечь сообщение об ошибке из JSON
                 error.put("error", responseBody);
             } else {
                 error.put("error", ex.getStatusText());
@@ -57,7 +56,7 @@ public class ErrorHandler {
             error.put("error", ex.getStatusText());
         }
 
-        // Возвращаем тот же статус, который пришел от сервера
+        // Возвращаем ТОТ ЖЕ СТАТУС, который пришел от сервера (404, 400 и т.д.)
         return ResponseEntity.status(ex.getStatusCode()).body(error);
     }
 
