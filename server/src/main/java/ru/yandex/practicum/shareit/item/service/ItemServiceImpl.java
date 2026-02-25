@@ -92,7 +92,6 @@ public class ItemServiceImpl implements ItemService {
 
         ItemDto itemDto = itemMapper.toItemDto(item);
 
-        // Для владельца добавляем информацию о бронированиях
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
             bookingRepository.findLastBookingForItem(itemId, now)
@@ -101,7 +100,6 @@ public class ItemServiceImpl implements ItemService {
                     .ifPresent(booking -> itemDto.setNextBooking(bookingMapper.toBookingShortDto(booking)));
         }
 
-        // Всегда загружаем комментарии для любого пользователя
         List<Comment> comments = commentRepository.findAllByItemId(itemId);
         log.debug("Found {} comments for item {}", comments.size(), itemId);
 
@@ -193,7 +191,6 @@ public class ItemServiceImpl implements ItemService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Проверяем, что пользователь действительно брал вещь в аренду И аренда завершена
         List<Booking> bookings = bookingRepository.findByBookerIdAndItemIdAndEndBefore(userId, itemId, now);
 
         log.debug("Found {} completed bookings for user {} on item {}", bookings.size(), userId, itemId);

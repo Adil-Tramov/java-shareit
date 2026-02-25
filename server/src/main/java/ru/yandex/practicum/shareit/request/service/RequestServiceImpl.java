@@ -38,7 +38,6 @@ public class RequestServiceImpl implements RequestService {
     public ItemRequestDto getRequestById(Long userId, Long requestId) {
         log.info("Getting request {} for user: {}", requestId, userId);
 
-        // Проверяем существование пользователя
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
@@ -60,7 +59,6 @@ public class RequestServiceImpl implements RequestService {
     public List<ItemRequestDto> getUserRequests(Long userId) {
         log.info("Getting requests for user: {}", userId);
 
-        // Проверяем существование пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
@@ -84,7 +82,6 @@ public class RequestServiceImpl implements RequestService {
     public List<ItemRequestDto> getAllRequests(Long userId, int from, int size) {
         log.info("Getting all requests for user: {} from {} size {}", userId, from, size);
 
-        // Проверяем существование пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 

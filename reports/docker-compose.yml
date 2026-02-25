@@ -46,7 +46,6 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     networks:
       - shareit-network
-    # Убираем wait-for-it, так как Spring Boot сам обработает задержку
 
 volumes:
   postgres_data:

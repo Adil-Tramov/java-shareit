@@ -15,7 +15,11 @@ import ru.yandex.practicum.shareit.user.service.UserService;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -131,7 +135,5 @@ class ItemServiceImplIntegrationTest {
 
     @Test
     void addComment_ShouldAddComment() {
-        // Этот тест требует наличия BookingService
-        // Пропускаем или реализуем позже
     }
 }

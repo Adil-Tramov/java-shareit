@@ -37,7 +37,6 @@ public class ErrorHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
-    // Важно: этот обработчик перехватывает все HTTP ошибки от сервера
     @ExceptionHandler(HttpStatusCodeException.class)
     public ResponseEntity<Map<String, String>> handleHttpStatusCodeException(HttpStatusCodeException ex) {
         log.error("HTTP error from server: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
@@ -55,7 +54,6 @@ public class ErrorHandler {
             error.put("error", ex.getStatusText());
         }
 
-        // Возвращаем ТОТ ЖЕ статус, который пришел от сервера
         return ResponseEntity.status(ex.getStatusCode()).body(error);
     }
 

@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // Поиск бронирований по пользователю
     List<Booking> findByBookerIdOrderByStartDesc(Long bookerId, Pageable pageable);
 
     List<Booking> findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(
@@ -32,7 +31,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByBookerIdAndStatusOrderByStartDesc(
             Long bookerId, BookingStatus status, Pageable pageable);
 
-    // Поиск бронирований по владельцу вещей
     @Query("SELECT b FROM Booking b " +
             "WHERE b.item.owner.id = :ownerId " +
             "ORDER BY b.start DESC")
@@ -70,11 +68,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                                              @Param("status") BookingStatus status,
                                              Pageable pageable);
 
-    // Для комментариев
-    // Убедитесь, что этот метод возвращает ТОЛЬКО завершенные бронирования
     List<Booking> findByBookerIdAndItemIdAndEndBefore(Long bookerId, Long itemId, LocalDateTime end);
 
-    // Для дат бронирований при просмотре вещей
     @Query("SELECT b FROM Booking b " +
             "WHERE b.item.id IN :itemIds " +
             "AND b.status = 'APPROVED' " +
@@ -109,7 +104,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "ORDER BY b.start ASC")
     List<Booking> findNextBookingsForOwner(@Param("ownerId") Long ownerId, @Param("now") LocalDateTime now);
 
-    // НОВЫЙ МЕТОД: Проверка на пересекающиеся бронирования
     @Query("SELECT b FROM Booking b " +
             "WHERE b.item.id = :itemId " +
             "AND b.status = :status " +
