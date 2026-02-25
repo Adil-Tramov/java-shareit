@@ -92,6 +92,7 @@ public class ItemServiceImpl implements ItemService {
 
         ItemDto itemDto = itemMapper.toItemDto(item);
 
+        // Для владельца добавляем информацию о бронированиях
         if (item.getOwner().getId().equals(userId)) {
             LocalDateTime now = LocalDateTime.now();
             bookingRepository.findLastBookingForItem(itemId, now)
@@ -100,13 +101,17 @@ public class ItemServiceImpl implements ItemService {
                     .ifPresent(booking -> itemDto.setNextBooking(bookingMapper.toBookingShortDto(booking)));
         }
 
-        // Всегда загружаем комментарии, независимо от того, владелец ли это
+        // Всегда загружаем комментарии для любого пользователя
         List<Comment> comments = commentRepository.findAllByItemId(itemId);
         log.debug("Found {} comments for item {}", comments.size(), itemId);
 
-        itemDto.setComments(comments.stream()
-                .map(itemMapper::toCommentDto)
-                .collect(Collectors.toList()));
+        if (!comments.isEmpty()) {
+            itemDto.setComments(comments.stream()
+                    .map(itemMapper::toCommentDto)
+                    .collect(Collectors.toList()));
+        } else {
+            itemDto.setComments(Collections.emptyList());
+        }
 
         return itemDto;
     }
@@ -205,7 +210,7 @@ public class ItemServiceImpl implements ItemService {
                 .build();
 
         comment = commentRepository.save(comment);
-        log.info("Comment saved with id: {}", comment.getId());
+        log.info("Comment saved with id: {} for item: {}", comment.getId(), itemId);
 
         return itemMapper.toCommentDto(comment);
     }

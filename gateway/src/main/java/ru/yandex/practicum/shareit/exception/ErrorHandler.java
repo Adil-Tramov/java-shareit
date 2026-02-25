@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.HashMap;
@@ -38,24 +37,25 @@ public class ErrorHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
-    // Обработка 404 ошибок от сервера
-    @ExceptionHandler(HttpClientErrorException.NotFound.class)
-    public ResponseEntity<Map<String, String>> handleNotFoundFromServer(HttpClientErrorException.NotFound ex) {
-        log.error("404 error from server: {}", ex.getResponseBodyAsString());
-        Map<String, String> error = new HashMap<>();
-        error.put("error", "Ресурс не найден");
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
-    // Общий обработчик для всех HTTP ошибок от сервера
+    // Важно: этот обработчик перехватывает все HTTP ошибки от сервера
     @ExceptionHandler(HttpStatusCodeException.class)
     public ResponseEntity<Map<String, String>> handleHttpStatusCodeException(HttpStatusCodeException ex) {
         log.error("HTTP error from server: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
 
         Map<String, String> error = new HashMap<>();
-        error.put("error", ex.getStatusText());
 
-        // Возвращаем тот же статус, который пришел от сервера
+        try {
+            String responseBody = ex.getResponseBodyAsString();
+            if (responseBody != null && !responseBody.isEmpty()) {
+                error.put("error", responseBody);
+            } else {
+                error.put("error", ex.getStatusText());
+            }
+        } catch (Exception e) {
+            error.put("error", ex.getStatusText());
+        }
+
+        // Возвращаем ТОТ ЖЕ статус, который пришел от сервера
         return ResponseEntity.status(ex.getStatusCode()).body(error);
     }
 
