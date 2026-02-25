@@ -18,7 +18,7 @@ public class ErrorHandler {
         log.error("Not found: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error); // 404
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error); // Должно быть 404
     }
 
     @ExceptionHandler(DuplicateEmailException.class)

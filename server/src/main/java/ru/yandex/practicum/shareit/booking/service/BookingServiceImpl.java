@@ -171,16 +171,16 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto approveBooking(Long userId, Long bookingId, boolean approved) {
         log.info("{} booking {} by user: {}", approved ? "Approving" : "Rejecting", bookingId, userId);
 
-        // Сначала проверяем существование пользователя
-        User user = userRepository.findById(userId)
+        // Проверяем существование пользователя
+        userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
 
         // Проверяем, что пользователь - владелец вещи
-        // Если нет - выбрасываем NotFoundException (404)
         if (!booking.getItem().getOwner().getId().equals(userId)) {
+            // Здесь должно быть NotFoundException, а не другое исключение
             throw new NotFoundException("Подтверждение бронирования доступно только владельцу вещи");
         }
 
