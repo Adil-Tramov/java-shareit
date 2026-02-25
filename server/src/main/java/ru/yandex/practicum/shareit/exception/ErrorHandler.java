@@ -44,4 +44,5 @@ public class ErrorHandler {
         error.put("error", "Произошла внутренняя ошибка сервера");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error); // 500
     }
+
 }
