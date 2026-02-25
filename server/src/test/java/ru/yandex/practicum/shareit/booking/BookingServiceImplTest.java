@@ -105,6 +105,8 @@ class BookingServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
+        verify(bookingRepository).findById(1L);
+        verify(userRepository, never()).findById(anyLong());
     }
 
     @Test
@@ -116,6 +118,8 @@ class BookingServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
+        verify(bookingRepository).findById(1L);
+        verify(userRepository, never()).findById(anyLong());
     }
 
     @Test
@@ -123,6 +127,8 @@ class BookingServiceImplTest {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         assertThrows(NotFoundException.class, () -> bookingService.getBookingById(3L, 1L));
+        verify(bookingRepository).findById(1L);
+        verify(userRepository, never()).findById(anyLong());
     }
 
     @Test
@@ -130,12 +136,14 @@ class BookingServiceImplTest {
         when(bookingRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> bookingService.getBookingById(1L, 99L));
+        verify(bookingRepository).findById(99L);
+        verify(userRepository, never()).findById(anyLong());
     }
 
     @Test
     void getUserBookings_WithStateAll_ShouldReturnList() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(booker));
-        when(bookingRepository.findByBookerIdOrderByStartDesc(anyLong(), any(Pageable.class)))
+        when(bookingRepository.findByBookerIdOrderByStartDesc(eq(2L), any(Pageable.class)))
                 .thenReturn(List.of(booking));
         when(bookingMapper.toBookingDto(any(Booking.class))).thenReturn(bookingDto);
 
@@ -143,6 +151,8 @@ class BookingServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
+        verify(userRepository).findById(2L);
+        verify(bookingRepository).findByBookerIdOrderByStartDesc(eq(2L), any(Pageable.class));
     }
 
     @Test
@@ -151,12 +161,24 @@ class BookingServiceImplTest {
 
         assertThrows(UnsupportedStateException.class,
                 () -> bookingService.getUserBookings(2L, "INVALID", 0, 10));
+        verify(userRepository).findById(2L);
+        verify(bookingRepository, never()).findByBookerIdOrderByStartDesc(anyLong(), any(Pageable.class));
+    }
+
+    @Test
+    void getUserBookings_WithInvalidUser_ShouldThrowNotFoundException() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> bookingService.getUserBookings(99L, "ALL", 0, 10));
+        verify(userRepository).findById(99L);
+        verify(bookingRepository, never()).findByBookerIdOrderByStartDesc(anyLong(), any(Pageable.class));
     }
 
     @Test
     void getOwnerBookings_WithStateAll_ShouldReturnList() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
-        when(bookingRepository.findByItemOwnerId(anyLong(), any(Pageable.class)))
+        when(bookingRepository.findByItemOwnerId(eq(1L), any(Pageable.class)))
                 .thenReturn(List.of(booking));
         when(bookingMapper.toBookingDto(any(Booking.class))).thenReturn(bookingDto);
 
@@ -164,6 +186,18 @@ class BookingServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
+        verify(userRepository).findById(1L);
+        verify(bookingRepository).findByItemOwnerId(eq(1L), any(Pageable.class));
+    }
+
+    @Test
+    void getOwnerBookings_WithInvalidUser_ShouldThrowNotFoundException() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> bookingService.getOwnerBookings(99L, "ALL", 0, 10));
+        verify(userRepository).findById(99L);
+        verify(bookingRepository, never()).findByItemOwnerId(anyLong(), any(Pageable.class));
     }
 
     @Test
@@ -176,19 +210,54 @@ class BookingServiceImplTest {
         BookingDto result = bookingService.createBooking(2L, 1L, now.plusDays(1), now.plusDays(2));
 
         assertNotNull(result);
+        verify(userRepository).findById(2L);
+        verify(itemRepository).findById(1L);
         verify(bookingRepository).save(any(Booking.class));
     }
 
     @Test
+    void createBooking_WithInvalidUser_ShouldThrowNotFoundException() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> bookingService.createBooking(99L, 1L, now.plusDays(1), now.plusDays(2)));
+        verify(userRepository).findById(99L);
+        verify(itemRepository, never()).findById(anyLong());
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    void createBooking_WithInvalidItem_ShouldThrowNotFoundException() {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(booker));
+        when(itemRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> bookingService.createBooking(2L, 99L, now.plusDays(1), now.plusDays(2)));
+        verify(userRepository).findById(2L);
+        verify(itemRepository).findById(99L);
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
     void createBooking_WithEndBeforeStart_ShouldThrowBadRequestException() {
+        // Не мокаем userRepository.findById() так как проверка дат происходит до проверки пользователя
         assertThrows(BadRequestException.class,
                 () -> bookingService.createBooking(2L, 1L, now.plusDays(2), now.plusDays(1)));
+
+        verify(userRepository, never()).findById(anyLong());
+        verify(itemRepository, never()).findById(anyLong());
+        verify(bookingRepository, never()).save(any(Booking.class));
     }
 
     @Test
     void createBooking_WithEqualDates_ShouldThrowBadRequestException() {
+        // Не мокаем userRepository.findById() так как проверка дат происходит до проверки пользователя
         assertThrows(BadRequestException.class,
                 () -> bookingService.createBooking(2L, 1L, now.plusDays(1), now.plusDays(1)));
+
+        verify(userRepository, never()).findById(anyLong());
+        verify(itemRepository, never()).findById(anyLong());
+        verify(bookingRepository, never()).save(any(Booking.class));
     }
 
     @Test
@@ -199,6 +268,9 @@ class BookingServiceImplTest {
 
         assertThrows(BadRequestException.class,
                 () -> bookingService.createBooking(2L, 1L, now.plusDays(1), now.plusDays(2)));
+        verify(userRepository).findById(2L);
+        verify(itemRepository).findById(1L);
+        verify(bookingRepository, never()).save(any(Booking.class));
     }
 
     @Test
@@ -208,10 +280,14 @@ class BookingServiceImplTest {
 
         assertThrows(NotFoundException.class,
                 () -> bookingService.createBooking(1L, 1L, now.plusDays(1), now.plusDays(2)));
+        verify(userRepository).findById(1L);
+        verify(itemRepository).findById(1L);
+        verify(bookingRepository, never()).save(any(Booking.class));
     }
 
     @Test
     void approveBooking_WithValidData_ShouldApprove() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
         when(bookingMapper.toBookingDto(any(Booking.class))).thenReturn(bookingDto);
@@ -219,21 +295,71 @@ class BookingServiceImplTest {
         BookingDto result = bookingService.approveBooking(1L, 1L, true);
 
         assertNotNull(result);
+        verify(userRepository).findById(1L);
+        verify(bookingRepository).findById(1L);
         verify(bookingRepository).save(any(Booking.class));
     }
 
     @Test
+    void approveBooking_WithInvalidUser_ShouldThrowNotFoundException() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> bookingService.approveBooking(99L, 1L, true));
+        verify(userRepository).findById(99L);
+        verify(bookingRepository, never()).findById(anyLong());
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    void approveBooking_WithInvalidBooking_ShouldThrowNotFoundException() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(bookingRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> bookingService.approveBooking(1L, 99L, true));
+        verify(userRepository).findById(1L);
+        verify(bookingRepository).findById(99L);
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
     void approveBooking_WithNonOwner_ShouldThrowNotFoundException() {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(booker));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
-        assertThrows(NotFoundException.class, () -> bookingService.approveBooking(2L, 1L, true));
+        assertThrows(NotFoundException.class,
+                () -> bookingService.approveBooking(2L, 1L, true));
+        verify(userRepository).findById(2L);
+        verify(bookingRepository).findById(1L);
+        verify(bookingRepository, never()).save(any(Booking.class));
     }
 
     @Test
     void approveBooking_WhenAlreadyApproved_ShouldThrowBadRequestException() {
         booking.setStatus(BookingStatus.APPROVED);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
-        assertThrows(BadRequestException.class, () -> bookingService.approveBooking(1L, 1L, true));
+        assertThrows(BadRequestException.class,
+                () -> bookingService.approveBooking(1L, 1L, true));
+        verify(userRepository).findById(1L);
+        verify(bookingRepository).findById(1L);
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    void approveBooking_WhenRejecting_ShouldSetRejectedStatus() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(owner));
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        when(bookingMapper.toBookingDto(any(Booking.class))).thenReturn(bookingDto);
+
+        BookingDto result = bookingService.approveBooking(1L, 1L, false);
+
+        assertNotNull(result);
+        verify(userRepository).findById(1L);
+        verify(bookingRepository).findById(1L);
+        verify(bookingRepository).save(any(Booking.class));
     }
 }
