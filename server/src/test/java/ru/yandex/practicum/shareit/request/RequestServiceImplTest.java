@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import ru.yandex.practicum.shareit.exception.NotFoundException;
-import ru.yandex.practicum.shareit.item.dto.ItemDto;
 import ru.yandex.practicum.shareit.item.mapper.ItemMapper;
 import ru.yandex.practicum.shareit.item.repository.ItemRepository;
 import ru.yandex.practicum.shareit.request.dto.ItemRequestDto;
