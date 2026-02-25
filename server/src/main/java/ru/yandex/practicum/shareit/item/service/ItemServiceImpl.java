@@ -100,7 +100,10 @@ public class ItemServiceImpl implements ItemService {
                     .ifPresent(booking -> itemDto.setNextBooking(bookingMapper.toBookingShortDto(booking)));
         }
 
+        // Всегда загружаем комментарии, независимо от того, владелец ли это
         List<Comment> comments = commentRepository.findAllByItemId(itemId);
+        log.debug("Found {} comments for item {}", comments.size(), itemId);
+
         itemDto.setComments(comments.stream()
                 .map(itemMapper::toCommentDto)
                 .collect(Collectors.toList()));
@@ -184,10 +187,14 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Вещь с id " + itemId + " не найдена"));
 
         LocalDateTime now = LocalDateTime.now();
+
+        // Проверяем, что пользователь действительно брал вещь в аренду И аренда завершена
         List<Booking> bookings = bookingRepository.findByBookerIdAndItemIdAndEndBefore(userId, itemId, now);
 
+        log.debug("Found {} completed bookings for user {} on item {}", bookings.size(), userId, itemId);
+
         if (bookings.isEmpty()) {
-            throw new BadRequestException("Пользователь не брал эту вещь в аренду");
+            throw new BadRequestException("Пользователь не брал эту вещь в аренду или аренда ещё не завершена");
         }
 
         Comment comment = Comment.builder()
@@ -198,6 +205,8 @@ public class ItemServiceImpl implements ItemService {
                 .build();
 
         comment = commentRepository.save(comment);
+        log.info("Comment saved with id: {}", comment.getId());
+
         return itemMapper.toCommentDto(comment);
     }
 }

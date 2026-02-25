@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.HashMap;
@@ -26,7 +28,7 @@ public class ErrorHandler {
         String firstError = errors.values().stream().findFirst().orElse("Ошибка валидации");
         Map<String, String> error = new HashMap<>();
         error.put("error", firstError);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -34,34 +36,27 @@ public class ErrorHandler {
         log.error("Illegal argument: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.badRequest().body(error);
     }
 
-    // Этот обработчик перехватывает ошибки от сервера и возвращает ТОТ ЖЕ статус
+    // Обработка 404 ошибок от сервера
+    @ExceptionHandler(HttpClientErrorException.NotFound.class)
+    public ResponseEntity<Map<String, String>> handleNotFoundFromServer(HttpClientErrorException.NotFound ex) {
+        log.error("404 error from server: {}", ex.getResponseBodyAsString());
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Ресурс не найден");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    // Общий обработчик для всех HTTP ошибок от сервера
     @ExceptionHandler(HttpStatusCodeException.class)
     public ResponseEntity<Map<String, String>> handleHttpStatusCodeException(HttpStatusCodeException ex) {
         log.error("HTTP error from server: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
 
         Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getStatusText());
 
-        try {
-            String responseBody = ex.getResponseBodyAsString();
-            if (responseBody != null && !responseBody.isEmpty()) {
-                // Пытаемся извлечь сообщение об ошибке
-                if (responseBody.startsWith("{")) {
-                    // Это JSON, пробуем распарсить
-                    error.put("error", responseBody);
-                } else {
-                    error.put("error", responseBody);
-                }
-            } else {
-                error.put("error", ex.getStatusText());
-            }
-        } catch (Exception e) {
-            error.put("error", ex.getStatusText());
-        }
-
-        // Возвращаем ТОТ ЖЕ статус, который пришел от сервера (404, 400 и т.д.)
+        // Возвращаем тот же статус, который пришел от сервера
         return ResponseEntity.status(ex.getStatusCode()).body(error);
     }
 

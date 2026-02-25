@@ -71,6 +71,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                                              Pageable pageable);
 
     // Для комментариев
+    // Убедитесь, что этот метод возвращает ТОЛЬКО завершенные бронирования
     List<Booking> findByBookerIdAndItemIdAndEndBefore(Long bookerId, Long itemId, LocalDateTime end);
 
     // Для дат бронирований при просмотре вещей
