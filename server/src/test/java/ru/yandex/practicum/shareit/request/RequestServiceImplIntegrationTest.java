@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.shareit.item.dto.ItemDto;
 import ru.yandex.practicum.shareit.item.service.ItemService;
 import ru.yandex.practicum.shareit.request.dto.ItemRequestDto;
 import ru.yandex.practicum.shareit.request.service.RequestService;
@@ -90,6 +91,7 @@ class RequestServiceImplIntegrationTest {
     void getRequestById_WithItems_ShouldIncludeItems() {
         ItemRequestDto request = requestService.createRequest(user1.getId(), "Need a drill");
 
+        // Здесь используется ItemDto - нужен импорт
         itemService.createItem(user2.getId(), ItemDto.builder()
                 .name("Drill")
                 .description("Powerful drill")
