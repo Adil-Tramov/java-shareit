@@ -132,7 +132,7 @@
 							</execution>
 						</executions>
 						<configuration>
-							<configLocation>checkstyle.xml</configLocation>
+							<configLocation>reports/checkstyle.xml</configLocation>
 							<includeTestSourceDirectory>true</includeTestSourceDirectory>
 							<failOnViolation>true</failOnViolation>
 							<logViolationsToConsole>true</logViolationsToConsole>
