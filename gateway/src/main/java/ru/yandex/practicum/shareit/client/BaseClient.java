@@ -4,6 +4,7 @@ import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import ru.yandex.practicum.shareit.exception.ErrorHandler;
 
 import java.util.List;
 import java.util.Map;
@@ -79,17 +80,19 @@ public class BaseClient {
                                                           @Nullable Map<String, Object> parameters, @Nullable T body) {
         HttpEntity<T> requestEntity = new HttpEntity<>(body, defaultHeaders(userId));
 
-        ResponseEntity<Object> shareitServerResponse;
         try {
+            ResponseEntity<Object> shareitServerResponse;
             if (parameters != null) {
                 shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
                 shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class);
             }
+            return prepareGatewayResponse(shareitServerResponse);
         } catch (HttpStatusCodeException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+            // Пробрасываем исключение дальше, чтобы ErrorHandler мог его обработать
+            // и вернуть правильный статус код
+            throw e;
         }
-        return prepareGatewayResponse(shareitServerResponse);
     }
 
     private HttpHeaders defaultHeaders(Long userId) {

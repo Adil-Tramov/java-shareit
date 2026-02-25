@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,6 @@ public class ErrorHandler {
         );
         log.error("Validation error: {}", errors);
 
-        // Возвращаем первую ошибку в поле "error" для совместимости с тестами
         String firstError = errors.values().stream().findFirst().orElse("Ошибка валидации");
         Map<String, String> error = new HashMap<>();
         error.put("error", firstError);
@@ -35,6 +35,30 @@ public class ErrorHandler {
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
         return ResponseEntity.badRequest().body(error);
+    }
+
+    // Обработка HTTP статусов от сервера
+    @ExceptionHandler(HttpStatusCodeException.class)
+    public ResponseEntity<Map<String, String>> handleHttpStatusCodeException(HttpStatusCodeException ex) {
+        log.error("HTTP error from server: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+
+        Map<String, String> error = new HashMap<>();
+
+        // Пытаемся извлечь сообщение об ошибке из ответа сервера
+        try {
+            // Если ответ содержит JSON с полем "error", используем его
+            String responseBody = ex.getResponseBodyAsString();
+            if (responseBody != null && !responseBody.isEmpty()) {
+                error.put("error", responseBody);
+            } else {
+                error.put("error", ex.getStatusText());
+            }
+        } catch (Exception e) {
+            error.put("error", ex.getStatusText());
+        }
+
+        // Возвращаем тот же статус, который пришел от сервера
+        return ResponseEntity.status(ex.getStatusCode()).body(error);
     }
 
     @ExceptionHandler(Exception.class)
