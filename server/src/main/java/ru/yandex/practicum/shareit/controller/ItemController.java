@@ -8,6 +8,7 @@ import ru.yandex.practicum.shareit.item.dto.ItemDto;
 import ru.yandex.practicum.shareit.item.service.ItemService;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -53,8 +54,9 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
                                  @PathVariable Long itemId,
-                                 @RequestBody String text) {
-        log.info("Adding comment to item {} from user: {}", itemId, userId);
+                                 @RequestBody Map<String, String> body) {
+        String text = body.get("text");
+        log.info("Adding comment to item {} from user: {} with text: {}", itemId, userId, text);
         return itemService.addComment(userId, itemId, text);
     }
 }

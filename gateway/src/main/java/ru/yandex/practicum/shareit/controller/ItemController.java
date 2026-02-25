@@ -56,6 +56,7 @@ public class ItemController {
                                              @PathVariable long itemId,
                                              @Valid @RequestBody CommentDto commentDto) {
         log.info("Gateway: Adding comment to item {} from user: {}", itemId, userId);
+        // Убеждаемся, что текст комментария передается как есть
         return itemClient.addComment(userId, itemId, commentDto);
     }
 }
