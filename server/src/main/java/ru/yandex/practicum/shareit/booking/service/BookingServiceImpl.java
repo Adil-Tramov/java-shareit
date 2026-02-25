@@ -206,6 +206,7 @@ public class BookingServiceImpl implements BookingService {
 
         // Проверяем, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
+            // ДОЛЖНО БЫТЬ NotFoundException (404), а не ForbiddenException (403)
             throw new NotFoundException("Подтверждение бронирования доступно только владельцу вещи");
         }
 

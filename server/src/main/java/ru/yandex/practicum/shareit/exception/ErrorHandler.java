@@ -18,7 +18,7 @@ public class ErrorHandler {
         log.error("Not found: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error); // ДОЛЖНО БЫТЬ 404
     }
 
     @ExceptionHandler(DuplicateEmailException.class)
@@ -26,7 +26,7 @@ public class ErrorHandler {
         log.error("Duplicate email: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error); // 409
     }
 
     @ExceptionHandler(BadRequestException.class)
@@ -34,7 +34,7 @@ public class ErrorHandler {
         log.error("Bad request: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error); // 400
     }
 
     @ExceptionHandler(UnsupportedStateException.class)
@@ -42,7 +42,7 @@ public class ErrorHandler {
         log.error("Unsupported state: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error); // 400
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -50,7 +50,7 @@ public class ErrorHandler {
         log.error("Illegal argument: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error); // 400
     }
 
     @ExceptionHandler(Exception.class)
@@ -58,6 +58,6 @@ public class ErrorHandler {
         log.error("Internal server error: {}", ex.getMessage(), ex);
         Map<String, String> error = new HashMap<>();
         error.put("error", "Произошла внутренняя ошибка сервера");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error); // 500
     }
 }
