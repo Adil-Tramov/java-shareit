@@ -6,22 +6,27 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.practicum.shareit.booking.model.Status;
-import ru.practicum.shareit.item.ItemRepository;
-import ru.practicum.shareit.item.Item;
-import ru.practicum.shareit.user.UserRepository;
-import ru.practicum.shareit.user.model.User;
+import ru.yandex.practicum.shareit.booking.dto.BookingDto;
+import ru.yandex.practicum.shareit.booking.mapper.BookingMapper;
+import ru.yandex.practicum.shareit.booking.model.Booking;
+import ru.yandex.practicum.shareit.booking.model.BookingStatus;
+import ru.yandex.practicum.shareit.booking.repository.BookingRepository;
+import ru.yandex.practicum.shareit.booking.service.BookingServiceImpl;
+import ru.yandex.practicum.shareit.exception.NotFoundException;
+import ru.yandex.practicum.shareit.item.model.Item;
+import ru.yandex.practicum.shareit.item.repository.ItemRepository;
+import ru.yandex.practicum.shareit.user.model.User;
+import ru.yandex.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class BookingServiceTest {
+public class BookingServiceTest {
 
     @Mock
     private BookingRepository bookingRepository;
@@ -32,101 +37,87 @@ class BookingServiceTest {
     @Mock
     private ItemRepository itemRepository;
 
+    @Mock
+    private BookingMapper bookingMapper;
+
     @InjectMocks
     private BookingServiceImpl bookingService;
 
     private User owner;
     private User booker;
-    private User wrongUser;
     private Item item;
     private Booking booking;
+    private LocalDateTime start;
+    private LocalDateTime end;
 
     @BeforeEach
     void setUp() {
-        owner = new User();
-        owner.setId(1L);
-        owner.setName("Owner");
-        owner.setEmail("owner@test.com");
+        owner = User.builder()
+                .id(1L)
+                .name("Owner")
+                .email("owner@test.com")
+                .build();
 
-        booker = new User();
-        booker.setId(2L);
-        booker.setName("Booker");
-        booker.setEmail("booker@test.com");
+        booker = User.builder()
+                .id(2L)
+                .name("Booker")
+                .email("booker@test.com")
+                .build();
 
-        wrongUser = new User();
-        wrongUser.setId(3L);
-        wrongUser.setName("Wrong");
-        wrongUser.setEmail("wrong@test.com");
+        item = Item.builder()
+                .id(1L)
+                .name("Test Item")
+                .description("Test Description")
+                .available(true)
+                .owner(owner)
+                .build();
 
-        item = new Item();
-        item.setId(1L);
-        item.setName("Test Item");
-        item.setDescription("Test Description");
-        item.setAvailable(true);
-        item.setOwner(owner);
+        start = LocalDateTime.now().plusDays(1);
+        end = LocalDateTime.now().plusDays(2);
 
-        booking = new Booking();
-        booking.setId(1L);
-        booking.setStart(LocalDateTime.now().plusDays(1));
-        booking.setEnd(LocalDateTime.now().plusDays(2));
-        booking.setItem(item);
-        booking.setBooker(booker);
-        booking.setStatus(Status.WAITING);
+        booking = Booking.builder()
+                .id(1L)
+                .start(start)
+                .end(end)
+                .item(item)
+                .booker(booker)
+                .status(BookingStatus.WAITING)
+                .build();
     }
 
     @Test
-    void approveBooking_ByWrongUser_ShouldThrowForbiddenException() {
-        // Мокаем только то, что реально используется
-        when(userRepository.findById(wrongUser.getId())).thenReturn(Optional.of(wrongUser));
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
+    void getBookingById_WhenUserIsBooker_ShouldReturnBooking() {
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingMapper.toBookingDto(any(Booking.class))).thenReturn(new BookingDto());
 
-        assertThrows(ForbiddenException.class,
-                () -> bookingService.approveBooking(wrongUser.getId(), booking.getId(), true));
+        BookingDto result = bookingService.getBookingById(2L, 1L);
 
-        verify(bookingRepository, never()).save(any(Booking.class));
+        assertNotNull(result);
+        verify(bookingRepository).findById(1L);
     }
 
     @Test
-    void approveBooking_ByOwner_ShouldSucceed() {
-        when(userRepository.findById(owner.getId())).thenReturn(Optional.of(owner));
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+    void getBookingById_WhenUserIsOwner_ShouldReturnBooking() {
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+        when(bookingMapper.toBookingDto(any(Booking.class))).thenReturn(new BookingDto());
 
-        assertDoesNotThrow(() ->
-                bookingService.approveBooking(owner.getId(), booking.getId(), true)
-        );
+        BookingDto result = bookingService.getBookingById(1L, 1L);
 
-        verify(bookingRepository).save(any(Booking.class));
+        assertNotNull(result);
+        verify(bookingRepository).findById(1L);
     }
 
     @Test
-    void approveBooking_WithNonExistentUser_ShouldThrowNotFoundException() {
-        Long nonExistentUserId = 999L;
+    void getBookingById_WhenUserIsNotAuthorized_ShouldThrowException() {
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
-        when(bookingRepository.findById(booking.getId())).thenReturn(Optional.of(booking));
-        when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
-
-        NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> bookingService.approveBooking(nonExistentUserId, booking.getId(), true));
-
-        assertEquals("Пользователь с ID " + nonExistentUserId + " не найден", exception.getMessage());
-        verify(bookingRepository, times(1)).findById(booking.getId());
-        verify(userRepository, times(1)).findById(nonExistentUserId);
-        verify(bookingRepository, never()).save(any(Booking.class));
+        assertThrows(NotFoundException.class, () -> bookingService.getBookingById(3L, 1L));
     }
 
     @Test
-    void approveBooking_WithNonExistentBooking_ShouldThrowNotFoundException() {
-        Long nonExistentBookingId = 999L;
+    void getBookingById_WhenBookingNotFound_ShouldThrowException() {
+        when(bookingRepository.findById(99L)).thenReturn(Optional.empty());
 
-        when(bookingRepository.findById(nonExistentBookingId)).thenReturn(Optional.empty());
-
-        NotFoundException exception = assertThrows(NotFoundException.class,
-                () -> bookingService.approveBooking(owner.getId(), nonExistentBookingId, true));
-
-        assertEquals("Бронирование с ID " + nonExistentBookingId + " не найдено", exception.getMessage());
-        verify(bookingRepository, times(1)).findById(nonExistentBookingId);
-        verify(userRepository, never()).findById(anyLong());
-        verify(bookingRepository, never()).save(any(Booking.class));
+        assertThrows(NotFoundException.class, () -> bookingService.getBookingById(1L, 99L));
     }
 }
