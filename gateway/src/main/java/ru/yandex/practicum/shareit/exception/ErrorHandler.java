@@ -26,7 +26,7 @@ public class ErrorHandler {
         String firstError = errors.values().stream().findFirst().orElse("Ошибка валидации");
         Map<String, String> error = new HashMap<>();
         error.put("error", firstError);
-        return ResponseEntity.badRequest().body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -34,10 +34,10 @@ public class ErrorHandler {
         log.error("Illegal argument: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.badRequest().body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // Обработка HTTP статусов от сервера - ЭТО РЕШАЕТ ПРОБЛЕМУ 403
+    // ВАЖНО: Этот обработчик перехватывает ошибки от сервера и возвращает ТОТ ЖЕ статус
     @ExceptionHandler(HttpStatusCodeException.class)
     public ResponseEntity<Map<String, String>> handleHttpStatusCodeException(HttpStatusCodeException ex) {
         log.error("HTTP error from server: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
@@ -47,8 +47,13 @@ public class ErrorHandler {
         try {
             String responseBody = ex.getResponseBodyAsString();
             if (responseBody != null && !responseBody.isEmpty()) {
-                // Пытаемся извлечь сообщение об ошибке из JSON
-                error.put("error", responseBody);
+                // Пытаемся извлечь сообщение об ошибке
+                if (responseBody.startsWith("{")) {
+                    // Это JSON, оставляем как есть
+                    error.put("error", responseBody);
+                } else {
+                    error.put("error", responseBody);
+                }
             } else {
                 error.put("error", ex.getStatusText());
             }
@@ -56,8 +61,16 @@ public class ErrorHandler {
             error.put("error", ex.getStatusText());
         }
 
-        // Возвращаем ТОТ ЖЕ СТАТУС, который пришел от сервера (404, 400 и т.д.)
+        // ВОЗВРАЩАЕМ ТОТ ЖЕ СТАТУС, ЧТО ПРИШЕЛ ОТ СЕРВЕРА
         return ResponseEntity.status(ex.getStatusCode()).body(error);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNotFoundException(NotFoundException ex) {
+        log.error("Not found: {}", ex.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(Exception.class)
