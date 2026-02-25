@@ -105,7 +105,7 @@ public class BookingServiceImpl implements BookingService {
 
         // Проверяем существование пользователя
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new RuntimeException("Пользователь с id " + userId + " не найден"));
 
         // Пагинация: from - индекс первого элемента, size - количество на странице
         int page = from / size;
