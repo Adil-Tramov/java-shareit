@@ -105,7 +105,7 @@ public class BookingServiceImpl implements BookingService {
 
         // Проверяем существование пользователя
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден")); // ИСПРАВЛЕНО!
 
         // Пагинация: from - индекс первого элемента, size - количество на странице
         int page = from / size;
@@ -198,17 +198,27 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto approveBooking(Long userId, Long bookingId, boolean approved) {
         log.info("{} booking {} by user: {}", approved ? "Approving" : "Rejecting", bookingId, userId);
 
-        // Проверяем существование пользователя
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-
+        // Сначала проверяем бронирование
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с id " + bookingId + " не найдено"));
 
-        // Проверяем, что пользователь - владелец вещи
-        if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // ТЕСТ ОЖИДАЕТ 403, А НЕ 404!
+        // Проверяем, существует ли пользователь
+        User user = userRepository.findById(userId)
+                .orElse(null); // Не выбрасываем исключение сразу
+
+        // Проверяем, является ли пользователь владельцем
+        boolean isOwner = booking.getItem().getOwner().getId().equals(userId);
+
+        if (!isOwner) {
+            // Если пользователь не владелец, возвращаем 403
+            log.info("User {} is not owner of item {}. Returning 403",
+                    userId, booking.getItem().getId());
             throw new ForbiddenException("Подтверждение бронирования доступно только владельцу вещи");
+        }
+
+        // Если пользователь - владелец, но его нет в БД (странно, но возможно)
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
 
         if (!booking.getStatus().equals(BookingStatus.WAITING)) {
