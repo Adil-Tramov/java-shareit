@@ -14,6 +14,7 @@ import ru.yandex.practicum.shareit.booking.model.BookingStatus;
 import ru.yandex.practicum.shareit.booking.repository.BookingRepository;
 import ru.yandex.practicum.shareit.exception.BadRequestException;
 import ru.yandex.practicum.shareit.exception.NotFoundException;
+import ru.yandex.practicum.shareit.exception.ForbiddenException;
 import ru.yandex.practicum.shareit.exception.UnsupportedStateException;
 import ru.yandex.practicum.shareit.item.model.Item;
 import ru.yandex.practicum.shareit.item.repository.ItemRepository;
@@ -206,8 +207,8 @@ public class BookingServiceImpl implements BookingService {
 
         // Проверяем, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // ВАЖНО: возвращаем 404, а не 403
-            throw new NotFoundException("Подтверждение бронирования доступно только владельцу вещи");
+            // ТЕСТ ОЖИДАЕТ 403, НЕ 404!
+            throw new ForbiddenException("Подтверждение бронирования доступно только владельцу вещи");
         }
 
         if (!booking.getStatus().equals(BookingStatus.WAITING)) {
