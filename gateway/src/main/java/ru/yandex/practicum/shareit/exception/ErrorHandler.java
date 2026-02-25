@@ -22,8 +22,11 @@ public class ErrorHandler {
         );
         log.error("Validation error: {}", errors);
 
-        // Возвращаем только ошибки валидации, без лишних полей
-        return ResponseEntity.badRequest().body(errors);
+        // Возвращаем первую ошибку в поле "error" для совместимости с тестами
+        String firstError = errors.values().stream().findFirst().orElse("Ошибка валидации");
+        Map<String, String> error = new HashMap<>();
+        error.put("error", firstError);
+        return ResponseEntity.badRequest().body(error);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
