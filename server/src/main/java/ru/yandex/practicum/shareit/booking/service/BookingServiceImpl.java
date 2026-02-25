@@ -174,8 +174,12 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с id " + bookingId + " не найдено"));
 
+        // Проверяем, что пользователь существует
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+
+        // Если пользователь не владелец вещи - возвращаем 404, а не 403
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // Возвращаем 404, а не 403 для совместимости с тестами
             throw new NotFoundException("Подтверждение бронирования доступно только владельцу вещи");
         }
 
