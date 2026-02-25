@@ -7,6 +7,7 @@ import ru.yandex.practicum.shareit.request.dto.ItemRequestDto;
 import ru.yandex.practicum.shareit.request.service.RequestService;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -38,7 +39,8 @@ public class RequestController {
 
     @PostMapping
     public ItemRequestDto createRequest(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                        @RequestBody String description) {
+                                        @RequestBody Map<String, String> body) {
+        String description = body.get("description");
         log.info("Creating request for user: {} with description: {}", userId, description);
         return requestService.createRequest(userId, description);
     }
