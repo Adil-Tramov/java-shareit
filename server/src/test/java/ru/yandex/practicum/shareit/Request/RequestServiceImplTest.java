@@ -89,7 +89,7 @@ class RequestServiceImplTest {
 
     @Test
     void getRequestById_WithValidId_ShouldReturnRequest() {
-        // Метод getRequestById НЕ вызывает userRepository.findById()
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(requestRepository.findById(1L)).thenReturn(Optional.of(request));
         when(requestMapper.toItemRequestDto(request)).thenReturn(requestDto);
         when(itemRepository.findAllByRequestId(1L)).thenReturn(List.of());
@@ -99,34 +99,28 @@ class RequestServiceImplTest {
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("Need a drill", result.getDescription());
+        verify(userRepository).findById(1L);
         verify(requestRepository).findById(1L);
         verify(itemRepository).findAllByRequestId(1L);
-        verify(userRepository, never()).findById(anyLong()); // Убеждаемся, что не вызывается
     }
 
     @Test
     void getRequestById_WithInvalidRequestId_ShouldThrowNotFoundException() {
-        // Метод getRequestById НЕ вызывает userRepository.findById()
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(requestRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> requestService.getRequestById(1L, 99L));
+        verify(userRepository).findById(1L);
         verify(requestRepository).findById(99L);
-        verify(userRepository, never()).findById(anyLong());
     }
 
     @Test
-    void getRequestById_WithInvalidUserId_ShouldStillWork() {
-        // Метод getRequestById не проверяет существование пользователя!
-        when(requestRepository.findById(1L)).thenReturn(Optional.of(request));
-        when(requestMapper.toItemRequestDto(request)).thenReturn(requestDto);
-        when(itemRepository.findAllByRequestId(1L)).thenReturn(List.of());
+    void getRequestById_WithInvalidUserId_ShouldThrowNotFoundException() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        // Даже с несуществующим userId метод должен работать
-        ItemRequestDto result = requestService.getRequestById(99L, 1L);
-
-        assertNotNull(result);
-        verify(requestRepository).findById(1L);
-        verify(userRepository, never()).findById(anyLong());
+        assertThrows(NotFoundException.class, () -> requestService.getRequestById(99L, 1L));
+        verify(userRepository).findById(99L);
+        verify(requestRepository, never()).findById(anyLong());
     }
 
     @Test
@@ -204,18 +198,21 @@ class RequestServiceImplTest {
 
     @Test
     void getRequestById_WithItems_ShouldIncludeItems() {
-        ItemDto itemDto = ItemDto.builder().id(1L).name("Drill").build();
+        // В этом тесте не нужно мокать itemMapper, так как он не используется напрямую
+        // Items маппятся через itemRepository.findAllByRequestId() и затем через itemMapper в сервисе,
+        // но мы не проверяем конкретные Items, а только факт их наличия
 
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(requestRepository.findById(1L)).thenReturn(Optional.of(request));
         when(requestMapper.toItemRequestDto(request)).thenReturn(requestDto);
-        when(itemRepository.findAllByRequestId(1L)).thenReturn(List.of());
-        // Не мокаем itemMapper, так как он не используется в методе
+        when(itemRepository.findAllByRequestId(1L)).thenReturn(List.of()); // Пустой список items
 
         ItemRequestDto result = requestService.getRequestById(1L, 1L);
 
         assertNotNull(result);
+        verify(userRepository).findById(1L);
         verify(requestRepository).findById(1L);
         verify(itemRepository).findAllByRequestId(1L);
-        verify(userRepository, never()).findById(anyLong());
+        // Не проверяем конкретные items, так как их нет в моках
     }
 }

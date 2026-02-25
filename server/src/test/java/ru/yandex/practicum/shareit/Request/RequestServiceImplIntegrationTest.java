@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.shareit.exception.NotFoundException;
 import ru.yandex.practicum.shareit.item.dto.ItemDto;
 import ru.yandex.practicum.shareit.item.service.ItemService;
 import ru.yandex.practicum.shareit.request.dto.ItemRequestDto;

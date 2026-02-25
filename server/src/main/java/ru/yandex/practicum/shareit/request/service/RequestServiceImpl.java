@@ -38,6 +38,10 @@ public class RequestServiceImpl implements RequestService {
     public ItemRequestDto getRequestById(Long userId, Long requestId) {
         log.info("Getting request {} for user: {}", requestId, userId);
 
+        // Проверяем существование пользователя
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+
         ItemRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запрос с id " + requestId + " не найден"));
 
@@ -56,6 +60,7 @@ public class RequestServiceImpl implements RequestService {
     public List<ItemRequestDto> getUserRequests(Long userId) {
         log.info("Getting requests for user: {}", userId);
 
+        // Проверяем существование пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
@@ -79,7 +84,8 @@ public class RequestServiceImpl implements RequestService {
     public List<ItemRequestDto> getAllRequests(Long userId, int from, int size) {
         log.info("Getting all requests for user: {} from {} size {}", userId, from, size);
 
-        userRepository.findById(userId)
+        // Проверяем существование пользователя
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
         Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created"));
