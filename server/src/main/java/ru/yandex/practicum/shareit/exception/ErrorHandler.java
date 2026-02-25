@@ -35,7 +35,7 @@ public class ErrorHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleException(Exception ex) {
-        log.error("Internal server error: {}", ex.getMessage(), ex);
+        log.error("Internal Dockerfile error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Произошла внутренняя ошибка сервера"));
     }
