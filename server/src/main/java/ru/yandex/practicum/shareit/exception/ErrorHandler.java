@@ -18,15 +18,7 @@ public class ErrorHandler {
         log.error("Not found: {}", ex.getMessage());
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error); // ДОЛЖНО БЫТЬ 404
-    }
-
-    @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<Map<String, String>> handleForbidden(ForbiddenException ex) {
-        log.error("Forbidden: {}", ex.getMessage());
-        Map<String, String> error = new HashMap<>();
-        error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error); // 403
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error); // 404
     }
 
     @ExceptionHandler(DuplicateEmailException.class)
@@ -35,14 +27,6 @@ public class ErrorHandler {
         Map<String, String> error = new HashMap<>();
         error.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error); // 409
-    }
-    
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
-        log.error("Runtime error: {}", ex.getMessage(), ex);
-        Map<String, String> error = new HashMap<>();
-        error.put("error", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error); // 500
     }
 
     @ExceptionHandler(BadRequestException.class)
