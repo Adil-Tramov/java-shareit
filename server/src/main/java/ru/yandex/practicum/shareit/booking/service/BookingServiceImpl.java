@@ -38,6 +38,10 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto getBookingById(Long userId, Long bookingId) {
         log.info("Getting booking {} for user: {}", bookingId, userId);
 
+        // Проверяем существование пользователя
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с id " + bookingId + " не найдено"));
 
@@ -52,12 +56,15 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getUserBookings(Long userId, String state, int from, int size) {
         log.info("Getting user {} bookings with state {}", userId, state);
 
+        // Проверяем существование пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
-        LocalDateTime now = LocalDateTime.now();
+        // Пагинация: from - индекс первого элемента, size - количество на странице
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "start"));
 
+        LocalDateTime now = LocalDateTime.now();
         List<Booking> bookings;
 
         switch (state.toUpperCase()) {
@@ -95,12 +102,15 @@ public class BookingServiceImpl implements BookingService {
     public List<BookingDto> getOwnerBookings(Long userId, String state, int from, int size) {
         log.info("Getting owner {} bookings with state {}", userId, state);
 
+        // Проверяем существование пользователя
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "start"));
-        LocalDateTime now = LocalDateTime.now();
+        // Пагинация: from - индекс первого элемента, size - количество на странице
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "start"));
 
+        LocalDateTime now = LocalDateTime.now();
         List<Booking> bookings;
 
         switch (state.toUpperCase()) {
@@ -136,8 +146,17 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto createBooking(Long userId, Long itemId, LocalDateTime start, LocalDateTime end) {
         log.info("Creating booking for user {} on item {} from {} to {}", userId, itemId, start, end);
 
+        // Валидация дат
+        if (start == null || end == null) {
+            throw new BadRequestException("Дата начала и окончания не могут быть null");
+        }
+
         if (start.isAfter(end) || start.isEqual(end)) {
             throw new BadRequestException("Дата окончания должна быть позже даты начала");
+        }
+
+        if (start.isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Дата начала не может быть в прошлом");
         }
 
         User booker = userRepository.findById(userId)
@@ -152,6 +171,13 @@ public class BookingServiceImpl implements BookingService {
 
         if (!item.getAvailable()) {
             throw new BadRequestException("Вещь недоступна для бронирования");
+        }
+
+        // Проверка на пересечение бронирований
+        List<Booking> conflictingBookings = bookingRepository.findConflictingBookings(
+                itemId, start, end, BookingStatus.APPROVED);
+        if (!conflictingBookings.isEmpty()) {
+            throw new BadRequestException("Вещь уже забронирована на указанные даты");
         }
 
         Booking booking = Booking.builder()
@@ -172,15 +198,14 @@ public class BookingServiceImpl implements BookingService {
         log.info("{} booking {} by user: {}", approved ? "Approving" : "Rejecting", bookingId, userId);
 
         // Проверяем существование пользователя
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
+                .orElseThrow(() -> new NotFoundException("Бронирование с id " + bookingId + " не найдено"));
 
         // Проверяем, что пользователь - владелец вещи
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            // Здесь должно быть NotFoundException, а не другое исключение
             throw new NotFoundException("Подтверждение бронирования доступно только владельцу вещи");
         }
 

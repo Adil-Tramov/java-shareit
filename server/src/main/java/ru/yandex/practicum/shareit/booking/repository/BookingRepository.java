@@ -108,6 +108,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "ORDER BY b.start ASC")
     List<Booking> findNextBookingsForOwner(@Param("ownerId") Long ownerId, @Param("now") LocalDateTime now);
 
+    // НОВЫЙ МЕТОД: Проверка на пересекающиеся бронирования
+    @Query("SELECT b FROM Booking b " +
+            "WHERE b.item.id = :itemId " +
+            "AND b.status = :status " +
+            "AND ((b.start <= :end AND b.end >= :start))")
+    List<Booking> findConflictingBookings(@Param("itemId") Long itemId,
+                                          @Param("start") LocalDateTime start,
+                                          @Param("end") LocalDateTime end,
+                                          @Param("status") BookingStatus status);
+
     default Map<Long, Booking> findLastBookingsForOwnerAsMap(Long ownerId, LocalDateTime now) {
         return findLastBookingsForOwner(ownerId, now).stream()
                 .collect(Collectors.toMap(
